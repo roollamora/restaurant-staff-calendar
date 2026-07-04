@@ -6,11 +6,11 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import {
-  initDb,
+  initUsersStore,
   getUserByUsername,
   getUserById,
   updatePassword,
-} from "./db.js";
+} from "./users-store.js";
 import {
   initCalendarStore,
   getCalendarData,
@@ -23,7 +23,7 @@ const isProd = process.env.NODE_ENV === "production";
 const useSecureCookies = process.env.COOKIE_SECURE === "true";
 const clientDist = path.join(__dirname, "..", "client", "dist");
 
-initDb();
+initUsersStore();
 initCalendarStore();
 
 const app = express();
@@ -51,23 +51,27 @@ function requireAuth(req, res, next) {
   next();
 }
 
-app.post("/api/login", (req, res) => {
+app.post("/api/login", async (req, res) => {
   const { username, password } = req.body ?? {};
   if (!username || !password) {
     return res.status(400).json({ error: "Username and password required" });
   }
-  const user = getUserByUsername(String(username).trim());
-  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
-    return res.status(401).json({ error: "Invalid username or password" });
+  try {
+    const user = await getUserByUsername(String(username).trim());
+    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+    req.session.userId = user.id;
+    res.json({
+      user: {
+        id: user.id,
+        username: user.username,
+        displayName: user.display_name,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
-  req.session.userId = user.id;
-  res.json({
-    user: {
-      id: user.id,
-      username: user.username,
-      displayName: user.display_name,
-    },
-  });
 });
 
 app.post("/api/logout", (req, res) => {
@@ -77,24 +81,28 @@ app.post("/api/logout", (req, res) => {
   });
 });
 
-app.get("/api/me", (req, res) => {
+app.get("/api/me", async (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ error: "Not authenticated" });
   }
-  const user = getUserById(req.session.userId);
-  if (!user) {
-    return res.status(401).json({ error: "Not authenticated" });
+  try {
+    const user = await getUserById(req.session.userId);
+    if (!user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    res.json({
+      user: {
+        id: user.id,
+        username: user.username,
+        displayName: user.display_name,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
-  res.json({
-    user: {
-      id: user.id,
-      username: user.username,
-      displayName: user.display_name,
-    },
-  });
 });
 
-app.post("/api/change-password", requireAuth, (req, res) => {
+app.post("/api/change-password", requireAuth, async (req, res) => {
   const { currentPassword, newPassword } = req.body ?? {};
   if (!currentPassword || !newPassword) {
     return res
@@ -106,14 +114,21 @@ app.post("/api/change-password", requireAuth, (req, res) => {
       .status(400)
       .json({ error: "New password must be at least 8 characters" });
   }
-  const user = getUserByUsername(
-    getUserById(req.session.userId).username,
-  );
-  if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
-    return res.status(401).json({ error: "Current password is incorrect" });
+  try {
+    const profile = await getUserById(req.session.userId);
+    const user = await getUserByUsername(profile.username);
+    if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
+    await updatePassword(
+      user.id,
+      bcrypt.hashSync(newPassword, 12),
+      profile.username,
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
-  updatePassword(user.id, bcrypt.hashSync(newPassword, 12));
-  res.json({ ok: true });
 });
 
 app.get("/api/data", requireAuth, async (_req, res) => {
@@ -129,8 +144,8 @@ app.put("/api/data", requireAuth, async (req, res) => {
   if (typeof version !== "number") {
     return res.status(400).json({ error: "Version required" });
   }
-  const user = getUserById(req.session.userId);
   try {
+    const user = await getUserById(req.session.userId);
     const result = await saveCalendarData(data, version, user?.username);
     res.json(result);
   } catch (e) {

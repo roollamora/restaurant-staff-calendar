@@ -15,7 +15,7 @@ Full-screen staff scheduling calendar with shared persistence, login, and role-b
 | What | Where |
 |------|--------|
 | Shifts, staff, hours, events | `data/calendar.json` in this repo (~few KB) |
-| Login passwords | Local SQLite (`data/calendar.db`, not in git) |
+| Login accounts (hashed passwords) | `data/users.json` in this repo |
 
 Every save bumps a **version number**. If two people edit at once, the second save gets the latest data instead of overwriting — schedules won't get corrupted.
 
@@ -61,7 +61,20 @@ npm start
 
 Open http://localhost:3847
 
-Login accounts use `data/calendar.db` (local only, gitignored). **Schedules** live in `data/calendar.json` — commit that file to back up on GitHub.
+Login accounts use `data/users.json` (hashed passwords, in git). **Schedules** live in `data/calendar.json`.
+
+## Staff access URL
+
+**Deploy once on Render (free):**
+
+1. Open: https://render.com/deploy?repo=https://github.com/roollamora/restaurant-staff-calendar
+2. Sign in / create a Render account
+3. When prompted, add env var **`GITHUB_TOKEN`** — create a [fine-grained token](https://github.com/settings/tokens?type=beta) with **Contents: Read and write** on this repo (paste the token value)
+4. Click **Deploy** — Render gives you a URL like `https://restaurant-staff-calendar.onrender.com`
+
+Share that URL with staff. Logins are in the table above.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/roollamora/restaurant-staff-calendar)
 
 ## Deploying (Render, Railway, Fly.io, VPS)
 

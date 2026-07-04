@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: restaurant-staff-calendar
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: GITHUB_REPO
+        value: roollamora/restaurant-staff-calendar
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: GITHUB_TOKEN
+        sync: false

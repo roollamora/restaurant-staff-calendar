@@ -5,8 +5,11 @@ client/dist/
 .DS_Store
 *.log
 
-# Local auth DB only — schedules live in data/calendar.json (tracked in git)
+# Temp writes while saving
+data/calendar.json.tmp
+data/users.json.tmp
+
+# Legacy local DB (no longer used)
 data/calendar.db
 data/calendar.db-wal
 data/calendar.db-shm
-data/calendar.json.tmp

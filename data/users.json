@@ -1,0 +1,34 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "rula",
+      "displayName": "Rula",
+      "passwordHash": "$2b$12$309cVIla3xJWf1D/R0anEOE/lXbO2F/kC4CRatEPc2xTbEXd1.Ptm"
+    },
+    {
+      "id": 2,
+      "username": "ayesha",
+      "displayName": "Ayesha",
+      "passwordHash": "$2b$12$SvtPtWkY6xQ/nI8IaHgr6uE.tFTCCJnXVodaxHX1tZdtwe7ob2EY6"
+    },
+    {
+      "id": 3,
+      "username": "federica",
+      "displayName": "Federica",
+      "passwordHash": "$2b$12$mqCJydzdAR96VWSP0lQ5EOVCdRy4AMxopR6y7MqCt2BOddDVkdc86"
+    },
+    {
+      "id": 4,
+      "username": "andrea",
+      "displayName": "Andrea",
+      "passwordHash": "$2b$12$prOvMFuwhMaSrXmXXSRGPOzup44nWjDX1SH/8nUw5Jtwf1WzbpT2K"
+    },
+    {
+      "id": 5,
+      "username": "shahed",
+      "displayName": "Shahed",
+      "passwordHash": "$2b$12$lqb.C19H8yLtce8y6Wd./eJujhm1ImIg2W5mDH4TeDzzzzzpYpqEK"
+    }
+  ]
+}
