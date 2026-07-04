@@ -772,17 +772,26 @@ export default function App() {
   );
 
   useEffect(() => {
-    auth
-      .me()
-      .then(async ({ user: u }) => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { user: u } = await auth.me();
+        if (!u || cancelled) return;
         setUser(u);
         const loaded = await calendar.load();
+        if (cancelled) return;
         setData(loaded.data);
         versionRef.current = loaded.version;
         setVersion(loaded.version);
-      })
-      .catch(() => {})
-      .finally(() => setBooting(false));
+      } catch (ex) {
+        console.error(ex);
+      } finally {
+        if (!cancelled) setBooting(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function logout() {

@@ -36,6 +36,7 @@ app.use(
     secret: process.env.SESSION_SECRET || "dev-only-change-in-production",
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
       httpOnly: true,
       sameSite: "lax",
@@ -63,12 +64,17 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid username or password" });
     }
     req.session.userId = user.id;
-    res.json({
-      user: {
-        id: user.id,
-        username: user.username,
-        displayName: user.display_name,
-      },
+    req.session.save((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Could not start session" });
+      }
+      res.json({
+        user: {
+          id: user.id,
+          username: user.username,
+          displayName: user.display_name,
+        },
+      });
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -84,12 +90,13 @@ app.post("/api/logout", (req, res) => {
 
 app.get("/api/me", async (req, res) => {
   if (!req.session.userId) {
-    return res.status(401).json({ error: "Not authenticated" });
+    return res.json({ user: null });
   }
   try {
     const user = await getUserById(req.session.userId);
     if (!user) {
-      return res.status(401).json({ error: "Not authenticated" });
+      req.session.destroy(() => {});
+      return res.json({ user: null });
     }
     res.json({
       user: {
