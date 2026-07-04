@@ -139,6 +139,10 @@ app.get("/api/data", requireAuth, async (_req, res) => {
   }
 });
 
+app.get("/health", (_req, res) => {
+  res.status(200).json({ ok: true });
+});
+
 app.put("/api/data", requireAuth, async (req, res) => {
   const { data, version } = req.body ?? {};
   if (typeof version !== "number") {
