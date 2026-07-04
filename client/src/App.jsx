@@ -683,9 +683,9 @@ function LoginPage({ onLogin }) {
     setLoading(true);
     try {
       const { user } = await auth.login(username.trim(), password);
-      onLogin(user);
+      await onLogin(user);
     } catch (ex) {
-      setError(ex.message);
+      setError(ex.message || "Sign in failed");
     } finally {
       setLoading(false);
     }
@@ -799,7 +799,11 @@ export default function App() {
   }
 
   if (booting) {
-    return <div className="login-page muted">Loading…</div>;
+    return (
+      <div className="login-page">
+        <p className="muted">Loading…</p>
+      </div>
+    );
   }
 
   if (!user) {
@@ -807,17 +811,39 @@ export default function App() {
       <LoginPage
         onLogin={async (u) => {
           setUser(u);
-          const loaded = await calendar.load();
-          setData(loaded.data);
-          versionRef.current = loaded.version;
-          setVersion(loaded.version);
+          try {
+            const loaded = await calendar.load();
+            setData(loaded.data);
+            versionRef.current = loaded.version;
+            setVersion(loaded.version);
+          } catch (ex) {
+            setUser(null);
+            setData(null);
+            throw ex;
+          }
         }}
       />
     );
   }
 
   if (!data) {
-    return <div className="login-page muted">Loading calendar…</div>;
+    return (
+      <div className="login-page">
+        <div className="login-card">
+          <p className="error">Could not load calendar. Try signing in again.</p>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => {
+              setUser(null);
+              setData(null);
+            }}
+          >
+            Back to sign in
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const openDays = data.hours.filter((h) => h.isOpen).length;
