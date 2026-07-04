@@ -10,9 +10,12 @@ import {
   getUserByUsername,
   getUserById,
   updatePassword,
+} from "./db.js";
+import {
+  initCalendarStore,
   getCalendarData,
   saveCalendarData,
-} from "./db.js";
+} from "./calendar-store.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3847;
@@ -21,6 +24,7 @@ const useSecureCookies = process.env.COOKIE_SECURE === "true";
 const clientDist = path.join(__dirname, "..", "client", "dist");
 
 initDb();
+initCalendarStore();
 
 const app = express();
 app.use(express.json({ limit: "2mb" }));
@@ -112,21 +116,26 @@ app.post("/api/change-password", requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-app.get("/api/data", requireAuth, (_req, res) => {
-  res.json(getCalendarData());
+app.get("/api/data", requireAuth, async (_req, res) => {
+  try {
+    res.json(await getCalendarData());
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-app.put("/api/data", requireAuth, (req, res) => {
+app.put("/api/data", requireAuth, async (req, res) => {
   const { data, version } = req.body ?? {};
   if (typeof version !== "number") {
     return res.status(400).json({ error: "Version required" });
   }
+  const user = getUserById(req.session.userId);
   try {
-    const result = saveCalendarData(data, version);
+    const result = await saveCalendarData(data, version, user?.username);
     res.json(result);
   } catch (e) {
     if (e.code === "VERSION_CONFLICT") {
-      const latest = getCalendarData();
+      const latest = await getCalendarData();
       return res.status(409).json({
         error: e.message,
         data: latest.data,

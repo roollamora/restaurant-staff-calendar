@@ -7,8 +7,23 @@ Full-screen staff scheduling calendar with shared persistence, login, and role-b
 - **Calendar**: week rows (Mon–Sun), scroll to load more weeks, 70px min day cells
 - **Day box editing**: `+ Shift` on each day, inline add/remove shifts
 - **Menu overlay**: Personnel, Opening hours, Events, Account (password change)
-- **Server persistence**: SQLite database — changes auto-save and survive restarts
-- **Multi-user**: five accounts share one calendar (optimistic locking prevents corruption)
+- **Server persistence**: schedules stored in `data/calendar.json` (small JSON, tracked in GitHub)
+- **Multi-user**: five accounts share one calendar (version locking prevents corruption)
+
+## Where schedules are stored
+
+| What | Where |
+|------|--------|
+| Shifts, staff, hours, events | `data/calendar.json` in this repo (~few KB) |
+| Login passwords | Local SQLite (`data/calendar.db`, not in git) |
+
+Every save bumps a **version number**. If two people edit at once, the second save gets the latest data instead of overwriting — schedules won't get corrupted.
+
+**Local dev:** edits write to `data/calendar.json`. Commit and push when you want to back up.
+
+**Deployed app:** set `GITHUB_TOKEN` — each save commits to GitHub automatically (no disk volume needed).
+
+Create a fine-grained token with **Contents: Read and write** on this repo only.
 
 ## Login accounts
 
@@ -46,17 +61,16 @@ npm start
 
 Open http://localhost:3847
 
-Data is stored in `data/calendar.db` (created automatically). **Back up this file** — it holds all calendar data and password hashes.
+Login accounts use `data/calendar.db` (local only, gitignored). **Schedules** live in `data/calendar.json` — commit that file to back up on GitHub.
 
-## Deploying (Railway, Render, Fly.io, VPS)
+## Deploying (Render, Railway, Fly.io, VPS)
 
 1. Push this repo to GitHub
-2. Set environment variables: `SESSION_SECRET`, `PORT`
-3. Attach a **persistent volume** to `/app/data` (or project `data/` folder) so SQLite is not wiped on redeploy
-4. Build command: `npm install && npm run build`
-5. Start command: `npm start`
+2. Set environment variables: `SESSION_SECRET`, `PORT`, `GITHUB_TOKEN`, `GITHUB_REPO`
+3. Build command: `npm install && npm run build`
+4. Start command: `npm start`
 
-Without persistent storage, calendar data resets on each deploy.
+With `GITHUB_TOKEN`, schedules persist in GitHub — no persistent volume required. Set `COOKIE_SECURE=true` when serving over HTTPS.
 
 ## Tech stack
 

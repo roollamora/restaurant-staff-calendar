@@ -1,7 +1,12 @@
 node_modules/
-data/
 .env
 dist/
 client/dist/
 .DS_Store
 *.log
+
+# Local auth DB only — schedules live in data/calendar.json (tracked in git)
+data/calendar.db
+data/calendar.db-wal
+data/calendar.db-shm
+data/calendar.json.tmp

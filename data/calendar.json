@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-04T12:00:00.000Z",
+  "data": {
+    "staff": [],
+    "hours": [
+      { "dayIndex": 0, "isOpen": false, "openTime": "12:00", "closeTime": "22:00" },
+      { "dayIndex": 1, "isOpen": false, "openTime": "12:00", "closeTime": "22:00" },
+      { "dayIndex": 2, "isOpen": false, "openTime": "12:00", "closeTime": "22:00" },
+      { "dayIndex": 3, "isOpen": false, "openTime": "12:00", "closeTime": "22:00" },
+      { "dayIndex": 4, "isOpen": false, "openTime": "12:00", "closeTime": "22:00" },
+      { "dayIndex": 5, "isOpen": false, "openTime": "12:00", "closeTime": "22:00" },
+      { "dayIndex": 6, "isOpen": false, "openTime": "12:00", "closeTime": "22:00" }
+    ],
+    "events": [],
+    "shifts": []
+  }
+}
