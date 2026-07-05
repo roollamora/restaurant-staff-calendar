@@ -226,6 +226,74 @@ function TimeRange({ from, to, setFrom, setTo }) {
   );
 }
 
+function parseTimeMins(timeStr) {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function formatMins(mins) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function mergeIntervals(intervals) {
+  if (!intervals.length) return [];
+  const sorted = [...intervals].sort((a, b) => a[0] - b[0]);
+  const merged = [sorted[0].slice()];
+  for (let i = 1; i < sorted.length; i++) {
+    const last = merged[merged.length - 1];
+    const [start, end] = sorted[i];
+    if (start <= last[1]) {
+      last[1] = Math.max(last[1], end);
+    } else {
+      merged.push([start, end]);
+    }
+  }
+  return merged;
+}
+
+function shiftsToIntervals(shifts, shiftType) {
+  return shifts
+    .filter((s) => (s.shiftType ?? "H") === shiftType)
+    .map((s) => [parseTimeMins(s.startTime), parseTimeMins(s.endTime)]);
+}
+
+function formatIntervalList(intervals) {
+  return intervals.map(([a, b]) => `${formatMins(a)}–${formatMins(b)}`).join(", ");
+}
+
+function coversRange(intervals, openMins, closeMins) {
+  const merged = mergeIntervals(intervals);
+  if (!merged.length) return false;
+  let cursor = openMins;
+  for (const [start, end] of merged) {
+    if (start > cursor) return false;
+    cursor = Math.max(cursor, end);
+    if (cursor >= closeMins) return true;
+  }
+  return cursor >= closeMins;
+}
+
+function getDayShiftCoverage(rule, myShifts) {
+  if (!rule?.isOpen) {
+    return { hasH: false, hasK: false, fullCover: false, label: "" };
+  }
+  const hIntervals = shiftsToIntervals(myShifts, "H");
+  const kIntervals = shiftsToIntervals(myShifts, "K");
+  const hasH = hIntervals.length > 0;
+  const hasK = kIntervals.length > 0;
+  if (!hasH || !hasK) {
+    return { hasH, hasK, fullCover: false, label: "" };
+  }
+  const openMins = parseTimeMins(rule.openTime);
+  const closeMins = parseTimeMins(rule.closeTime);
+  const combined = mergeIntervals([...hIntervals, ...kIntervals]);
+  const fullCover = coversRange(combined, openMins, closeMins);
+  const label = `H ${formatIntervalList(mergeIntervals(hIntervals))} · K ${formatIntervalList(mergeIntervals(kIntervals))}`;
+  return { hasH, hasK, fullCover, label };
+}
+
 function DayBox({
   date,
   hoursPeriods,
@@ -257,11 +325,18 @@ function DayBox({
   const today = iso === toISO(new Date());
   const missingH =
     rule?.isOpen && !myShifts.some((s) => (s.shiftType ?? "H") === "H");
+  const coverage = getDayShiftCoverage(rule, myShifts);
+  const coverageClass =
+    !missingH && coverage.hasH && coverage.hasK
+      ? coverage.fullCover
+        ? " coverage-full"
+        : " coverage-partial"
+      : "";
 
   return (
     <div
       id={`day-${iso}`}
-      className={`day-box${today ? " today" : ""}${editing ? " editing" : ""}${missingH ? " missing-h" : ""}`}
+      className={`day-box${today ? " today" : ""}${editing ? " editing" : ""}${coverageClass}${missingH ? " missing-h" : ""}`}
     >
       <div className="day-title">
         {DAY_SHORT[wd]} {date.getDate()}
@@ -269,6 +344,9 @@ function DayBox({
       <div className="muted">
         {rule?.isOpen ? `${rule.openTime}–${rule.closeTime}` : "Closed"}
       </div>
+      {!missingH && coverage.hasH && coverage.hasK && coverage.label && (
+        <div className="coverage-hours">{coverage.label}</div>
+      )}
       {myEvents.map((ev) => (
         <div key={ev.id} className="event-chip">
           <div>{ev.title}</div>
@@ -286,7 +364,9 @@ function DayBox({
             <Swatch color={person.color} />
             <div className="shift-info">
               <div>
-                {person.name}{" "}
+                <span style={{ color: COLOR_HEX[person.color] || COLOR_HEX.gray }}>
+                  {person.name}
+                </span>{" "}
                 <span className="shift-type">{sh.shiftType ?? "H"}</span>
               </div>
               <div className="muted">

@@ -85,6 +85,21 @@ Share that URL with staff. Logins are in the table above.
 
 With `GITHUB_TOKEN`, schedules persist in GitHub — no persistent volume required. Set `COOKIE_SECURE=true` when serving over HTTPS.
 
+### Render auto-deploy (no manual deploy each time)
+
+`render.yaml` sets **`autoDeploy: true`** and a **build filter** that ignores `data/**`. That way:
+
+- Pushing **code** (`client/`, `server/`, `package.json`, etc.) → Render rebuilds automatically
+- **Calendar saves** only update `data/calendar.json` on GitHub → no redeploy (data is read at runtime via `GITHUB_TOKEN`)
+
+**One-time setup on Render:**
+
+1. Dashboard → your web service → **Settings** → **Build & Deploy**
+2. **Auto-Deploy** → **On Commit** (if it says “Deploy a specific commit”, auto-deploy was turned off — switch back to On Commit)
+3. **Build Filters** → add ignored path `data/**` (or **Sync Blueprint** from the repo so `render.yaml` applies this)
+
+After that, `git push` is enough for code updates. Manual deploy is only needed if auto-deploy was disabled or you want “Clear build cache & deploy”.
+
 ## Tech stack
 
 - **Frontend**: React + Vite

@@ -4,7 +4,11 @@ services:
     runtime: node
     plan: free
     autoDeploy: true
-    buildCommand: echo "deploy-3-hours-fix" && npm install --include=dev && npm run build && npm prune --omit=dev
+    # Schedule saves commit data/*.json to main — ignore those so only code changes redeploy.
+    buildFilter:
+      ignoredPaths:
+        - data/**
+    buildCommand: npm install --include=dev && npm run build && npm prune --omit=dev
     startCommand: npm start
     healthCheckPath: /health
     envVars:

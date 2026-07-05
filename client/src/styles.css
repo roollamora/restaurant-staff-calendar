@@ -241,6 +241,22 @@ textarea {
   box-shadow: inset 0 0 0 1px #fc6b83;
 }
 
+.day-box.coverage-full {
+  border-color: #3fa266;
+  box-shadow: inset 0 0 0 1px #3fa266;
+}
+
+.day-box.coverage-partial {
+  border-color: #3fa266;
+  border-style: dashed;
+  box-shadow: inset 0 0 0 1px #3fa266;
+}
+
+.coverage-hours {
+  color: #3fa266;
+  font-size: 11px;
+}
+
 .shift-type {
   font-weight: 700;
   color: var(--accent);
@@ -260,6 +276,8 @@ textarea {
   text-align: center;
   font-size: 11px;
 }
+
+.shift-row {
   display: flex;
   align-items: center;
   gap: 4px;
