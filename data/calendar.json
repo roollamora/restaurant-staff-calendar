@@ -1,6 +1,6 @@
 {
-  "version": 64,
-  "updatedAt": "2026-07-05T16:55:43.679Z",
+  "version": 41,
+  "updatedAt": "2026-07-05T16:40:53.520Z",
   "data": {
     "staff": [
       {
@@ -125,9 +125,7 @@
     ],
     "menuCosting": {
       "suppliers": [],
-      "storageLocations": [
-        "Walk in"
-      ],
+      "storageLocations": [],
       "tabs": [
         {
           "id": "default",
@@ -136,17 +134,17 @@
             {
               "id": "dpn10zv5",
               "name": "Espresso",
-              "editing": false,
+              "expanded": true,
               "prepTimeMin": 0,
-              "cookTimeMin": 2,
-              "fixedCost": 1,
-              "price": 4,
+              "cookTimeMin": 0,
+              "fixedCost": 0,
+              "price": 0,
               "ingredients": [
                 {
                   "id": "4fajjl8h",
                   "name": "coffee",
-                  "amount": 0.03,
-                  "pricePerUnit": 20,
+                  "amount": 0,
+                  "pricePerUnit": 0,
                   "supplier": "",
                   "storage": ""
                 }
@@ -155,7 +153,7 @@
             {
               "id": "o4ghjafv",
               "name": "New item",
-              "editing": true,
+              "expanded": false,
               "prepTimeMin": 0,
               "cookTimeMin": 0,
               "fixedCost": 0,
@@ -172,11 +170,6 @@
               ]
             }
           ]
-        },
-        {
-          "id": "ygvu2i1y",
-          "title": "Coctails",
-          "items": []
         }
       ]
     }

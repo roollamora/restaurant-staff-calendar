@@ -70,20 +70,21 @@ function MenuItemBox({
   storageLocations,
   onChange,
   onRemove,
-  onStartEdit,
   onAddSupplier,
   onAddStorage,
 }) {
   const costs = itemCosts(item);
   const time = totalTimeMin(item);
+  const expanded = !!item.expanded;
   const editing = !!item.editing;
 
   function patch(partial) {
     onChange({ ...item, ...partial });
   }
 
-  function finishEdit() {
-    patch({ editing: false });
+  function toggleExpanded() {
+    if (expanded) patch({ expanded: false, editing: false });
+    else patch({ expanded: true, editing: false });
   }
 
   function patchIngredient(id, partial) {
@@ -103,27 +104,105 @@ function MenuItemBox({
     patch({ ingredients: item.ingredients.filter((ing) => ing.id !== id) });
   }
 
+  const ingredientRows = item.ingredients.map((ing) =>
+    editing ? (
+      <div key={ing.id} className="menu-ing-grid">
+        <input
+          value={ing.name}
+          onChange={(e) => patchIngredient(ing.id, { name: e.target.value })}
+          placeholder="Ingredient"
+        />
+        <input
+          type="number"
+          min="0"
+          step="any"
+          className="menu-ing-num"
+          value={ing.amount || ""}
+          onChange={(e) =>
+            patchIngredient(ing.id, { amount: Number(e.target.value) || 0 })
+          }
+        />
+        <input
+          type="number"
+          min="0"
+          step="any"
+          className="menu-ing-num"
+          value={ing.pricePerUnit || ""}
+          onChange={(e) =>
+            patchIngredient(ing.id, { pricePerUnit: Number(e.target.value) || 0 })
+          }
+        />
+        <OptionSelect
+          value={ing.supplier}
+          options={suppliers}
+          onChange={(v) => patchIngredient(ing.id, { supplier: v })}
+          onAddOption={onAddSupplier}
+          placeholder="Supplier"
+          addLabel="Add supplier"
+        />
+        <OptionSelect
+          value={ing.storage}
+          options={storageLocations}
+          onChange={(v) => patchIngredient(ing.id, { storage: v })}
+          onAddOption={onAddStorage}
+          placeholder="Storage"
+          addLabel="Add storage"
+        />
+        <button
+          type="button"
+          className="icon-btn"
+          title="Remove ingredient"
+          disabled={item.ingredients.length <= 1}
+          onClick={() => removeIngredient(ing.id)}
+        >
+          ✕
+        </button>
+      </div>
+    ) : (
+      <div key={ing.id} className="menu-ing-grid menu-ing-read">
+        <span>{ing.name || "—"}</span>
+        <span className="menu-ing-num">{ing.amount || "0"}</span>
+        <span className="menu-ing-num">{fmtEur(Number(ing.pricePerUnit) || 0)}</span>
+        <span>{ing.supplier || "—"}</span>
+        <span>{ing.storage || "—"}</span>
+        <span />
+      </div>
+    ),
+  );
+
   return (
-    <div className={`menu-item-box${editing ? " editing" : ""}`}>
-      <div className="menu-item-head">
-        <span className="menu-item-name">{item.name || "Untitled"}</span>
-        <span className="menu-item-summary muted">
-          {time} min · {fmtEur(costs.totalCost)} cost · {fmtEur(costs.profit)} profit (
-          {fmtPct(costs.marginPct)})
-        </span>
-        <div className="menu-item-actions">
-          {editing ? (
-            <button type="button" className="btn btn-primary btn-sm" onClick={finishEdit}>
-              Done
-            </button>
-          ) : (
+    <div className={`menu-item-box${expanded ? " expanded" : ""}${editing ? " editing" : ""}`}>
+      <button type="button" className="menu-item-head" onClick={toggleExpanded}>
+        <span className="menu-item-chevron">{expanded ? "▾" : "▸"}</span>
+        {!expanded && (
+          <>
+            <span className="menu-item-name">{item.name || "Untitled"}</span>
+            <span className="menu-item-summary muted">
+              {time} min · {fmtEur(costs.totalCost)} cost · {fmtEur(costs.profit)} profit (
+              {fmtPct(costs.marginPct)})
+            </span>
+          </>
+        )}
+        {expanded && (
+          <span className="menu-item-name">{item.name || "Untitled"}</span>
+        )}
+        <div className="menu-item-actions" onClick={(e) => e.stopPropagation()}>
+          {expanded && !editing && (
             <button
               type="button"
-              className="icon-btn"
-              title="Edit item"
-              onClick={() => onStartEdit(item.id)}
+              className="btn btn-secondary btn-sm"
+              onClick={() => patch({ editing: true })}
             >
-              ✎
+              Edit
+            </button>
+          )}
+          {editing && (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => patch({ editing: false })}
+            >
+              Done
             </button>
           )}
           <button
@@ -135,14 +214,16 @@ function MenuItemBox({
             ✕
           </button>
         </div>
-      </div>
+      </button>
 
-      {editing && (
+      {expanded && (
         <div className="menu-item-body">
-          <label className="field">
-            <span className="muted">Item name</span>
-            <input value={item.name} onChange={(e) => patch({ name: e.target.value })} />
-          </label>
+          {editing && (
+            <label className="field">
+              <span className="muted">Item name</span>
+              <input value={item.name} onChange={(e) => patch({ name: e.target.value })} />
+            </label>
+          )}
           <div className="menu-item-cols">
             <div className="menu-item-col">
               <h4>Ingredients</h4>
@@ -154,89 +235,51 @@ function MenuItemBox({
                 <span>Storage</span>
                 <span />
               </div>
-              {item.ingredients.map((ing) => (
-                <div key={ing.id} className="menu-ing-grid">
-                  <input
-                    value={ing.name}
-                    onChange={(e) => patchIngredient(ing.id, { name: e.target.value })}
-                    placeholder="Ingredient"
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    className="menu-ing-num"
-                    value={ing.amount || ""}
-                    onChange={(e) =>
-                      patchIngredient(ing.id, { amount: Number(e.target.value) || 0 })
-                    }
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    className="menu-ing-num"
-                    value={ing.pricePerUnit || ""}
-                    onChange={(e) =>
-                      patchIngredient(ing.id, {
-                        pricePerUnit: Number(e.target.value) || 0,
-                      })
-                    }
-                  />
-                  <OptionSelect
-                    value={ing.supplier}
-                    options={suppliers}
-                    onChange={(v) => patchIngredient(ing.id, { supplier: v })}
-                    onAddOption={onAddSupplier}
-                    placeholder="Supplier"
-                    addLabel="Add supplier"
-                  />
-                  <OptionSelect
-                    value={ing.storage}
-                    options={storageLocations}
-                    onChange={(v) => patchIngredient(ing.id, { storage: v })}
-                    onAddOption={onAddStorage}
-                    placeholder="Storage"
-                    addLabel="Add storage"
-                  />
-                  <button
-                    type="button"
-                    className="icon-btn"
-                    title="Remove ingredient"
-                    disabled={item.ingredients.length <= 1}
-                    onClick={() => removeIngredient(ing.id)}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-              <button type="button" className="btn btn-secondary" onClick={addIngredient}>
-                + Ingredient
-              </button>
+              {ingredientRows}
+              {editing && (
+                <button type="button" className="btn btn-secondary" onClick={addIngredient}>
+                  + Ingredient
+                </button>
+              )}
             </div>
 
             <div className="menu-item-col">
               <h4>Time</h4>
-              <label className="field">
-                <span className="muted">Prep (min)</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={item.prepTimeMin || ""}
-                  onChange={(e) => patch({ prepTimeMin: Number(e.target.value) || 0 })}
-                />
-              </label>
-              <label className="field">
-                <span className="muted">Cooking (min)</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={item.cookTimeMin || ""}
-                  onChange={(e) => patch({ cookTimeMin: Number(e.target.value) || 0 })}
-                />
-              </label>
+              {editing ? (
+                <>
+                  <label className="field">
+                    <span className="muted">Prep (min)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={item.prepTimeMin || ""}
+                      onChange={(e) => patch({ prepTimeMin: Number(e.target.value) || 0 })}
+                    />
+                  </label>
+                  <label className="field">
+                    <span className="muted">Cooking (min)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={item.cookTimeMin || ""}
+                      onChange={(e) => patch({ cookTimeMin: Number(e.target.value) || 0 })}
+                    />
+                  </label>
+                </>
+              ) : (
+                <>
+                  <div className="menu-cost-row">
+                    <span className="muted">Prep</span>
+                    <span>{item.prepTimeMin || 0} min</span>
+                  </div>
+                  <div className="menu-cost-row">
+                    <span className="muted">Cooking</span>
+                    <span>{item.cookTimeMin || 0} min</span>
+                  </div>
+                </>
+              )}
               <p className="muted" style={{ fontSize: 11, margin: 0 }}>
                 Labour includes +5 min buffer at €14/h
               </p>
@@ -252,35 +295,54 @@ function MenuItemBox({
                 <span className="muted">Labour</span>
                 <strong>{fmtEur(costs.labour)}</strong>
               </div>
-              <label className="field">
-                <span className="muted">Fixed cost (€)</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={item.fixedCost || ""}
-                  onChange={(e) => patch({ fixedCost: Number(e.target.value) || 0 })}
-                />
-              </label>
-              <label className="field">
-                <span className="muted">Price (€)</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={item.price || ""}
-                  onChange={(e) => patch({ price: Number(e.target.value) || 0 })}
-                />
-              </label>
+              {editing ? (
+                <>
+                  <label className="field">
+                    <span className="muted">Fixed cost (€)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={item.fixedCost || ""}
+                      onChange={(e) => patch({ fixedCost: Number(e.target.value) || 0 })}
+                    />
+                  </label>
+                  <label className="field">
+                    <span className="muted">Price (€)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={item.price || ""}
+                      onChange={(e) => patch({ price: Number(e.target.value) || 0 })}
+                    />
+                  </label>
+                </>
+              ) : (
+                <>
+                  <div className="menu-cost-row">
+                    <span className="muted">Fixed cost</span>
+                    <span>{fmtEur(costs.fixed)}</span>
+                  </div>
+                  <div className="menu-cost-row">
+                    <span className="muted">Price</span>
+                    <span>{fmtEur(costs.price)}</span>
+                  </div>
+                </>
+              )}
               <div className="menu-cost-row">
                 <span className="muted">Profit</span>
                 <strong className={costs.profit >= 0 ? "success-text" : "error-text"}>
-                  {fmtEur(costs.profit)}
+                  {fmtEur(costs.profit)}{" "}
+                  <span className="muted">({fmtEur(costs.materialProfit)})</span>
                 </strong>
               </div>
               <div className="menu-cost-row">
                 <span className="muted">Margin</span>
-                <strong>{fmtPct(costs.marginPct)}</strong>
+                <strong>
+                  {fmtPct(costs.marginPct)}{" "}
+                  <span className="muted">({fmtPct(costs.materialMarginPct)})</span>
+                </strong>
               </div>
             </div>
           </div>
@@ -345,20 +407,6 @@ export default function MenuCostingPage({ data, patchData }) {
     patchMenu((m) => ({
       ...m,
       tabs: m.tabs.map((t) => (t.id === tabId ? { ...t, items } : t)),
-    }));
-  }
-
-  function startEditItem(tabId, itemId) {
-    patchMenu((m) => ({
-      ...m,
-      tabs: m.tabs.map((t) =>
-        t.id === tabId
-          ? {
-              ...t,
-              items: t.items.map((i) => ({ ...i, editing: i.id === itemId })),
-            }
-          : { ...t, items: t.items.map((i) => ({ ...i, editing: false })) },
-      ),
     }));
   }
 
@@ -497,7 +545,11 @@ export default function MenuCostingPage({ data, patchData }) {
               onChange={(next) =>
                 patchTabItems(
                   activeTab.id,
-                  activeTab.items.map((i) => (i.id === item.id ? next : i)),
+                  activeTab.items.map((i) => {
+                    if (i.id === item.id) return next;
+                    if (next.editing) return { ...i, editing: false };
+                    return i;
+                  }),
                 )
               }
               onRemove={() => {
@@ -507,7 +559,6 @@ export default function MenuCostingPage({ data, patchData }) {
                   activeTab.items.filter((i) => i.id !== item.id),
                 );
               }}
-              onStartEdit={(id) => startEditItem(activeTab.id, id)}
               onAddSupplier={addSupplier}
               onAddStorage={addStorage}
             />
