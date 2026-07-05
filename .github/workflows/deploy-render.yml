@@ -1,6 +1,4 @@
-# Triggers a Render deploy when app code changes (not calendar data saves).
-# One-time setup: add repo secret RENDER_DEPLOY_HOOK from
-# Render → restaurant-staff-calendar → Settings → Deploy Hook.
+# Deploy app code to Render on every push (calendar data-only commits are skipped).
 name: Deploy to Render
 
 on:
@@ -18,13 +16,14 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Render deploy
-        env:
-          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+      - name: Install Render CLI
         run: |
-          if [ -z "$DEPLOY_HOOK" ]; then
-            echo "RENDER_DEPLOY_HOOK secret not set — skipping (Render auto-deploy may still run)."
-            exit 0
-          fi
-          curl -fsS -X POST "$DEPLOY_HOOK"
-          echo "Render deploy triggered."
+          curl -fsSL https://raw.githubusercontent.com/render-oss/cli/refs/heads/main/bin/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Deploy latest commit
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          CI: true
+        run: |
+          render deploys create "${{ secrets.RENDER_SERVICE_ID }}" --confirm --wait -o text
