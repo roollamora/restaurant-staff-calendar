@@ -1,6 +1,6 @@
 {
-  "version": 41,
-  "updatedAt": "2026-07-05T16:40:53.520Z",
+  "version": 42,
+  "updatedAt": "2026-07-05T17:00:10.629Z",
   "data": {
     "staff": [
       {
@@ -135,6 +135,7 @@
               "id": "dpn10zv5",
               "name": "Espresso",
               "expanded": true,
+              "editing": true,
               "prepTimeMin": 0,
               "cookTimeMin": 0,
               "fixedCost": 0,
@@ -154,6 +155,7 @@
               "id": "o4ghjafv",
               "name": "New item",
               "expanded": false,
+              "editing": false,
               "prepTimeMin": 0,
               "cookTimeMin": 0,
               "fixedCost": 0,
