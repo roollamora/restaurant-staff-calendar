@@ -1,6 +1,6 @@
 {
-  "version": 30,
-  "updatedAt": "2026-07-05T16:40:08.637Z",
+  "version": 31,
+  "updatedAt": "2026-07-05T16:40:16.836Z",
   "data": {
     "staff": [
       {
@@ -129,7 +129,7 @@
       "tabs": [
         {
           "id": "default",
-          "title": "Espresso",
+          "title": "War",
           "items": [
             {
               "id": "dpn10zv5",
