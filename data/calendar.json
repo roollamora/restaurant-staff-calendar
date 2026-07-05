@@ -1,6 +1,6 @@
 {
-  "version": 53,
-  "updatedAt": "2026-07-05T16:44:59.367Z",
+  "version": 54,
+  "updatedAt": "2026-07-05T16:45:00.936Z",
   "data": {
     "staff": [
       {
@@ -138,7 +138,7 @@
               "name": "Espresso",
               "expanded": true,
               "prepTimeMin": 0,
-              "cookTimeMin": 0,
+              "cookTimeMin": 2,
               "fixedCost": 0,
               "price": 0,
               "ingredients": [
