@@ -1,18 +1,20 @@
 {
-  "version": 1,
-  "updatedAt": "2026-07-04T12:00:00.000Z",
+  "version": 2,
+  "updatedAt": "2026-07-05T14:18:49.754Z",
   "data": {
     "staff": [],
+    "events": [],
+    "shifts": [],
     "hoursPeriods": [
       {
-        "id": "default",
+        "id": "migrated-default",
         "label": "Default",
         "startDate": "2026-01-01",
         "endDate": "2026-12-31",
         "days": [
           {
             "dayIndex": 0,
-            "isOpen": false,
+            "isOpen": true,
             "openTime": "12:00",
             "closeTime": "22:00"
           },
@@ -54,8 +56,6 @@
           }
         ]
       }
-    ],
-    "events": [],
-    "shifts": []
+    ]
   }
 }
