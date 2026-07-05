@@ -1,6 +1,6 @@
 {
-  "version": 35,
-  "updatedAt": "2026-07-05T16:40:29.935Z",
+  "version": 36,
+  "updatedAt": "2026-07-05T16:40:33.708Z",
   "data": {
     "staff": [
       {
@@ -134,7 +134,7 @@
             {
               "id": "dpn10zv5",
               "name": "New item",
-              "expanded": false,
+              "expanded": true,
               "prepTimeMin": 0,
               "cookTimeMin": 0,
               "fixedCost": 0,
