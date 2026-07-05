@@ -1,6 +1,6 @@
 {
-  "version": 34,
-  "updatedAt": "2026-07-05T16:40:21.766Z",
+  "version": 35,
+  "updatedAt": "2026-07-05T16:40:29.935Z",
   "data": {
     "staff": [
       {
@@ -142,6 +142,25 @@
               "ingredients": [
                 {
                   "id": "4fajjl8h",
+                  "name": "",
+                  "amount": 0,
+                  "pricePerUnit": 0,
+                  "supplier": "",
+                  "storage": ""
+                }
+              ]
+            },
+            {
+              "id": "o4ghjafv",
+              "name": "New item",
+              "expanded": false,
+              "prepTimeMin": 0,
+              "cookTimeMin": 0,
+              "fixedCost": 0,
+              "price": 0,
+              "ingredients": [
+                {
+                  "id": "6vus4em7",
                   "name": "",
                   "amount": 0,
                   "pricePerUnit": 0,
