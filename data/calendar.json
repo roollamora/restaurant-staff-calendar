@@ -1,6 +1,6 @@
 {
-  "version": 41,
-  "updatedAt": "2026-07-05T16:40:53.520Z",
+  "version": 42,
+  "updatedAt": "2026-07-05T16:43:28.212Z",
   "data": {
     "staff": [
       {
@@ -125,7 +125,9 @@
     ],
     "menuCosting": {
       "suppliers": [],
-      "storageLocations": [],
+      "storageLocations": [
+        "Walk in"
+      ],
       "tabs": [
         {
           "id": "default",
@@ -146,7 +148,7 @@
                   "amount": 0,
                   "pricePerUnit": 0,
                   "supplier": "",
-                  "storage": ""
+                  "storage": "Walk in"
                 }
               ]
             },
