@@ -1,6 +1,6 @@
 {
-  "version": 40,
-  "updatedAt": "2026-07-05T16:40:48.960Z",
+  "version": 41,
+  "updatedAt": "2026-07-05T16:40:53.520Z",
   "data": {
     "staff": [
       {
@@ -142,7 +142,7 @@
               "ingredients": [
                 {
                   "id": "4fajjl8h",
-                  "name": "ground coffe",
+                  "name": "coffee",
                   "amount": 0,
                   "pricePerUnit": 0,
                   "supplier": "",
