@@ -1,6 +1,6 @@
 {
-  "version": 31,
-  "updatedAt": "2026-07-05T16:40:16.836Z",
+  "version": 32,
+  "updatedAt": "2026-07-05T16:40:18.840Z",
   "data": {
     "staff": [
       {
@@ -129,7 +129,7 @@
       "tabs": [
         {
           "id": "default",
-          "title": "War",
+          "title": "Warm d",
           "items": [
             {
               "id": "dpn10zv5",
