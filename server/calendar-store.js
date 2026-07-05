@@ -139,13 +139,17 @@ export function initCalendarStore() {
 
 export async function getCalendarData() {
   if (GITHUB_TOKEN) {
-    const { envelope } = await readFromGitHub();
-    writeLocalCache(envelope);
-    return {
-      data: envelope.data,
-      version: envelope.version,
-      updatedAt: envelope.updatedAt,
-    };
+    try {
+      const { envelope } = await readFromGitHub();
+      writeLocalCache(envelope);
+      return {
+        data: envelope.data,
+        version: envelope.version,
+        updatedAt: envelope.updatedAt,
+      };
+    } catch (e) {
+      console.warn("GitHub calendar read failed, using local file:", e.message);
+    }
   }
 
   const envelope = readLocalFile();

@@ -78,9 +78,13 @@ async function writeToGitHub(store, sha, commitMessage) {
 
 async function loadStore() {
   if (GITHUB_TOKEN) {
-    const { store } = await readFromGitHub();
-    writeLocalCache(store);
-    return store;
+    try {
+      const { store } = await readFromGitHub();
+      writeLocalCache(store);
+      return store;
+    } catch (e) {
+      console.warn("GitHub users read failed, using local file:", e.message);
+    }
   }
   return readLocalFile();
 }

@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     autoDeploy: true
-    buildCommand: npm install --include=dev && npm run build && npm prune --omit=dev
+    buildCommand: echo "deploy-2" && npm install --include=dev && npm run build && npm prune --omit=dev
     startCommand: npm start
     healthCheckPath: /health
     envVars:
@@ -16,3 +16,5 @@ services:
         value: roollamora/restaurant-staff-calendar
       - key: GITHUB_TOKEN
         sync: false
+      - key: APP_VERSION
+        value: "2"

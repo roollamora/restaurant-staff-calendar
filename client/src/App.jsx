@@ -676,18 +676,22 @@ function LoginPage({ onLogin }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
 
   async function submit(e) {
     e.preventDefault();
     setError("");
+    setStatus("");
     setLoading(true);
     try {
       const { user } = await auth.login(username.trim(), password);
+      setStatus("Loading calendar…");
       await onLogin(user);
     } catch (ex) {
       setError(ex.message || "Sign in failed");
     } finally {
       setLoading(false);
+      setStatus("");
     }
   }
 
@@ -718,6 +722,7 @@ function LoginPage({ onLogin }) {
           />
         </div>
         {error && <p className="error">{error}</p>}
+        {status && <p className="muted">{status}</p>}
         <button type="submit" className="btn btn-primary" disabled={loading}>
           {loading ? "Signing in…" : "Sign in"}
         </button>
