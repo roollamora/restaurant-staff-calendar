@@ -1,6 +1,6 @@
 {
-  "version": 24,
-  "updatedAt": "2026-07-05T15:36:50.581Z",
+  "version": 25,
+  "updatedAt": "2026-07-05T15:37:02.484Z",
   "data": {
     "staff": [
       {
@@ -19,7 +19,7 @@
         "id": "azsd6oyl",
         "name": "Ayesha",
         "phone": "",
-        "color": "green",
+        "color": "purple",
         "areas": {
           "dk": true,
           "kueche": true,
