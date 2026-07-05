@@ -116,7 +116,7 @@ function MenuItemBox({
           <>
             <span className="menu-item-name">{item.name || "Untitled"}</span>
             <span className="menu-item-summary muted">
-              {time} min · {fmtEur(costs.totalCost)} cost · {fmtEur(costs.profit)} profit (
+              {time} min · {fmtEur(costs.material)} cost · {fmtEur(costs.profit)} profit (
               {fmtPct(costs.marginPct)})
             </span>
           </>
@@ -266,13 +266,13 @@ function MenuItemBox({
                 />
               </label>
               <div className="menu-cost-row">
-                <span className="muted">Profit</span>
+                <span className="muted">Profit (excl. labour &amp; fixed)</span>
                 <strong className={costs.profit >= 0 ? "success-text" : "error-text"}>
                   {fmtEur(costs.profit)}
                 </strong>
               </div>
               <div className="menu-cost-row">
-                <span className="muted">Margin</span>
+                <span className="muted">Margin (excl. labour &amp; fixed)</span>
                 <strong>{fmtPct(costs.marginPct)}</strong>
               </div>
             </div>

@@ -101,7 +101,8 @@ export function itemCosts(item) {
   const fixed = num(item.fixedCost);
   const price = num(item.price);
   const totalCost = material + labour + fixed;
-  const profit = price - totalCost;
+  // Profit & margin: material cost only (exclude labour + fixed)
+  const profit = price - material;
   const marginPct = price > 0 ? (profit / price) * 100 : 0;
   return { material, labour, fixed, totalCost, profit, marginPct, price };
 }
