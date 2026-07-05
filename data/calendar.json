@@ -1,6 +1,6 @@
 {
-  "version": 75,
-  "updatedAt": "2026-07-05T17:08:29.340Z",
+  "version": 76,
+  "updatedAt": "2026-07-05T18:46:55.488Z",
   "data": {
     "staff": [
       {
@@ -106,14 +106,6 @@
     ],
     "events": [],
     "shifts": [
-      {
-        "id": "t93zoyjl",
-        "staffId": "1yq9yaf9",
-        "date": "2026-07-07",
-        "startTime": "12:00",
-        "endTime": "22:00",
-        "shiftType": "H"
-      },
       {
         "id": "bjoun3ws",
         "staffId": "1yq9yaf9",
