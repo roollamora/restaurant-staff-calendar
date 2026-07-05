@@ -1,6 +1,6 @@
 {
-  "version": 33,
-  "updatedAt": "2026-07-05T16:40:20.638Z",
+  "version": 34,
+  "updatedAt": "2026-07-05T16:40:21.766Z",
   "data": {
     "staff": [
       {
@@ -129,7 +129,7 @@
       "tabs": [
         {
           "id": "default",
-          "title": "Warm ",
+          "title": "Warm Drinks",
           "items": [
             {
               "id": "dpn10zv5",
