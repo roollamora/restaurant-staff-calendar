@@ -11,15 +11,54 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
 export const DEFAULT_DATA = {
   staff: [],
-  hours: Array.from({ length: 7 }, (_, dayIndex) => ({
+  hoursPeriods: [
+    {
+      id: "default",
+      label: "Default",
+      startDate: `${new Date().getFullYear()}-01-01`,
+      endDate: `${new Date().getFullYear()}-12-31`,
+      days: Array.from({ length: 7 }, (_, dayIndex) => ({
+        dayIndex,
+        isOpen: false,
+        openTime: "12:00",
+        closeTime: "22:00",
+      })),
+    },
+  ],
+  events: [],
+  shifts: [],
+};
+
+function blankDayHours() {
+  return Array.from({ length: 7 }, (_, dayIndex) => ({
     dayIndex,
     isOpen: false,
     openTime: "12:00",
     closeTime: "22:00",
-  })),
-  events: [],
-  shifts: [],
-};
+  }));
+}
+
+function migrateData(data) {
+  if (!data || typeof data !== "object") return DEFAULT_DATA;
+  if (Array.isArray(data.hoursPeriods) && data.hoursPeriods.length > 0) {
+    const { hours: _legacy, ...rest } = data;
+    return rest;
+  }
+  const y = new Date().getFullYear();
+  const { hours, ...rest } = data;
+  return {
+    ...rest,
+    hoursPeriods: [
+      {
+        id: "migrated-default",
+        label: "Default",
+        startDate: `${y}-01-01`,
+        endDate: `${y}-12-31`,
+        days: Array.isArray(hours) && hours.length === 7 ? hours : blankDayHours(),
+      },
+    ],
+  };
+}
 
 function defaultEnvelope() {
   return {
@@ -29,10 +68,30 @@ function defaultEnvelope() {
   };
 }
 
+function validateHoursPeriods(periods) {
+  if (!Array.isArray(periods) || periods.length === 0) return false;
+  return periods.every(
+    (p) =>
+      p.id &&
+      p.startDate &&
+      p.endDate &&
+      p.startDate <= p.endDate &&
+      Array.isArray(p.days) &&
+      p.days.length === 7 &&
+      p.days.every(
+        (d) =>
+          typeof d.dayIndex === "number" &&
+          typeof d.isOpen === "boolean" &&
+          typeof d.openTime === "string" &&
+          typeof d.closeTime === "string",
+      ),
+  );
+}
+
 function validateData(data) {
   if (!data || typeof data !== "object") return false;
   if (!Array.isArray(data.staff)) return false;
-  if (!Array.isArray(data.hours) || data.hours.length !== 7) return false;
+  if (!validateHoursPeriods(data.hoursPeriods)) return false;
   if (!Array.isArray(data.events)) return false;
   if (!Array.isArray(data.shifts)) return false;
   return true;
@@ -40,13 +99,14 @@ function validateData(data) {
 
 function parseEnvelope(raw) {
   const envelope = typeof raw === "string" ? JSON.parse(raw) : raw;
-  if (!validateData(envelope?.data)) {
+  const data = migrateData(envelope?.data);
+  if (!validateData(data)) {
     throw new Error("Invalid calendar data shape");
   }
   if (typeof envelope.version !== "number") {
     throw new Error("Invalid calendar version");
   }
-  return envelope;
+  return { ...envelope, data };
 }
 
 function githubHeaders() {
@@ -161,14 +221,15 @@ export async function getCalendarData() {
 }
 
 export async function saveCalendarData(data, expectedVersion, username = "user") {
-  if (!validateData(data)) {
+  const payload = migrateData(data);
+  if (!validateData(payload)) {
     throw new Error("Invalid calendar data shape");
   }
 
   const nextEnvelope = {
     version: expectedVersion + 1,
     updatedAt: new Date().toISOString(),
-    data,
+    data: payload,
   };
 
   if (GITHUB_TOKEN) {

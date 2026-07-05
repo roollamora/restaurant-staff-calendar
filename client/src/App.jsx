@@ -59,6 +59,62 @@ function blankHours() {
   }));
 }
 
+function newHoursPeriod(label = "") {
+  const y = new Date().getFullYear();
+  return {
+    id: newId(),
+    label,
+    startDate: `${y}-01-01`,
+    endDate: `${y}-12-31`,
+    days: blankHours(),
+  };
+}
+
+function getHoursForDate(hoursPeriods, dateIso) {
+  const wd = dow(fromISO(dateIso));
+  const fallback = { dayIndex: wd, isOpen: false, openTime: "12:00", closeTime: "22:00" };
+  if (!hoursPeriods?.length) return fallback;
+
+  const matches = hoursPeriods.filter(
+    (p) => dateIso >= p.startDate && dateIso <= p.endDate,
+  );
+  if (!matches.length) return fallback;
+
+  const period = matches.reduce((best, p) => {
+    const span = fromISO(p.endDate) - fromISO(p.startDate);
+    const bestSpan = fromISO(best.endDate) - fromISO(best.startDate);
+    return span < bestSpan ? p : best;
+  });
+  return period.days.find((d) => d.dayIndex === wd) ?? fallback;
+}
+
+function formatPeriodRange(p) {
+  const f = { month: "short", day: "numeric", year: "numeric" };
+  return `${fromISO(p.startDate).toLocaleDateString("en-US", f)} – ${fromISO(p.endDate).toLocaleDateString("en-US", f)}`;
+}
+
+function normalizeCalendarData(data) {
+  if (!data) return data;
+  if (Array.isArray(data.hoursPeriods) && data.hoursPeriods.length > 0) {
+    const { hours: _legacy, ...rest } = data;
+    return rest;
+  }
+  const y = new Date().getFullYear();
+  const { hours, ...rest } = data;
+  return {
+    ...rest,
+    hoursPeriods: [
+      {
+        id: "migrated-default",
+        label: "Default",
+        startDate: `${y}-01-01`,
+        endDate: `${y}-12-31`,
+        days: Array.isArray(hours) && hours.length === 7 ? hours : blankHours(),
+      },
+    ],
+  };
+}
+
 function newId() {
   return Math.random().toString(36).slice(2, 10);
 }
@@ -121,7 +177,7 @@ function TimeRange({ from, to, setFrom, setTo }) {
 
 function DayBox({
   date,
-  hours,
+  hoursPeriods,
   events,
   shifts,
   staff,
@@ -139,7 +195,7 @@ function DayBox({
 }) {
   const iso = toISO(date);
   const wd = dow(date);
-  const rule = hours.find((h) => h.dayIndex === wd);
+  const rule = getHoursForDate(hoursPeriods, iso);
   const myShifts = shifts
     .filter((s) => s.date === iso)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -247,7 +303,7 @@ function CalendarView({ data, patchData }) {
   const [tStart, setTStart] = useState("12:00");
   const [tEnd, setTEnd] = useState("22:00");
 
-  const { staff, hours, events, shifts } = data;
+  const { staff, hoursPeriods, events, shifts } = data;
   const start = fromISO(anchor);
   const weeks = Array.from({ length: weekCount }, (_, w) =>
     Array.from({ length: 7 }, (_, d) => plusDays(start, w * 7 + d)),
@@ -296,7 +352,7 @@ function CalendarView({ data, patchData }) {
                 <div key={toISO(date)} className="day-wrap">
                   <DayBox
                     date={date}
-                    hours={hours}
+                    hoursPeriods={hoursPeriods}
                     events={events}
                     shifts={shifts}
                     staff={staff}
@@ -451,46 +507,236 @@ function PersonnelPanel({ data, patchData }) {
 }
 
 function HoursPanel({ data, patchData }) {
-  const { hours } = data;
-  function update(i, patch) {
+  const periods = data.hoursPeriods ?? [];
+  const [selectedId, setSelectedId] = useState(periods[0]?.id ?? null);
+  const [draft, setDraft] = useState(null);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  const savedPeriod = periods.find((p) => p.id === selectedId) ?? null;
+  const isNew = draft && !periods.some((p) => p.id === draft.id);
+
+  useEffect(() => {
+    if (selectedId && savedPeriod) {
+      setDraft(structuredClone(savedPeriod));
+      setError("");
+    }
+  }, [selectedId, data.hoursPeriods]);
+
+  useEffect(() => {
+    if (!periods.length && !draft) {
+      setDraft(newHoursPeriod("Default"));
+      setSelectedId(null);
+    }
+  }, [periods.length, draft]);
+
+  function selectPeriod(id) {
+    setSelectedId(id);
+    setError("");
+    setSaved(false);
+  }
+
+  function startNew() {
+    setSelectedId(null);
+    setDraft(newHoursPeriod(""));
+    setError("");
+    setSaved(false);
+  }
+
+  function updateDay(i, patch) {
+    setDraft((d) => ({
+      ...d,
+      days: d.days.map((h) => (h.dayIndex === i ? { ...h, ...patch } : h)),
+    }));
+    setSaved(false);
+  }
+
+  function save() {
+    if (!draft?.startDate || !draft?.endDate) {
+      setError("Start and end dates are required.");
+      return;
+    }
+    if (draft.startDate > draft.endDate) {
+      setError("End date must be on or after start date.");
+      return;
+    }
+
+    const row = {
+      ...draft,
+      label: draft.label?.trim() || formatPeriodRange(draft),
+      days: draft.days.map((d, i) => ({ ...blankHours()[i], ...d, dayIndex: i })),
+    };
+
+    patchData((prev) => {
+      const list = prev.hoursPeriods ?? [];
+      const exists = list.some((p) => p.id === row.id);
+      const hoursPeriods = exists
+        ? list.map((p) => (p.id === row.id ? row : p))
+        : [...list, row];
+      const { hours: _legacy, ...rest } = prev;
+      return { ...rest, hoursPeriods };
+    });
+
+    setSelectedId(row.id);
+    setSaved(true);
+    setError("");
+    setTimeout(() => setSaved(false), 2500);
+  }
+
+  function removePeriod(id) {
+    if (periods.length <= 1) {
+      setError("Keep at least one hours schedule.");
+      return;
+    }
     patchData((prev) => ({
       ...prev,
-      hours: prev.hours.map((h) => (h.dayIndex === i ? { ...h, ...patch } : h)),
+      hoursPeriods: prev.hoursPeriods.filter((p) => p.id !== id),
     }));
+    if (selectedId === id) {
+      const next = periods.find((p) => p.id !== id);
+      setSelectedId(next?.id ?? null);
+    }
+  }
+
+  const dirty =
+    draft &&
+    (isNew || !savedPeriod || JSON.stringify(draft) !== JSON.stringify(savedPeriod));
+
+  if (!draft) {
+    return (
+      <div className="panel-section">
+        <h2>Opening hours</h2>
+        <p className="muted">Loading…</p>
+      </div>
+    );
   }
 
   return (
     <div className="panel-section">
       <h2>Opening hours</h2>
-      <p className="muted">Weekly template for each weekday.</p>
-      {DAY_FULL.map((label, i) => {
-        const h = hours[i];
-        return (
-          <div key={i} className="card">
-            <div className="panel-section" style={{ gap: 8 }}>
-              <strong style={{ fontSize: 13 }}>{label}</strong>
-              <label className="checkbox-row">
-                <input
-                  type="checkbox"
-                  checked={h.isOpen}
-                  onChange={(e) => update(i, { isOpen: e.target.checked })}
-                />
-                Open
-              </label>
-              {h.isOpen ? (
-                <TimeRange
-                  from={h.openTime}
-                  to={h.closeTime}
-                  setFrom={(v) => update(i, { openTime: v })}
-                  setTo={(v) => update(i, { closeTime: v })}
-                />
-              ) : (
-                <span className="muted">Closed all day</span>
+      <p className="muted">
+        Set hours per date range (e.g. summer vs winter). Edit below, then Save to
+        apply on the calendar.
+      </p>
+
+      <div className="panel-section" style={{ gap: 8 }}>
+        <h3>Schedules</h3>
+        {periods.map((p) => (
+          <div key={p.id} className={`card${selectedId === p.id ? " card-active" : ""}`}>
+            <div className="card-row">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                style={{ flex: 1, textAlign: "left" }}
+                onClick={() => selectPeriod(p.id)}
+              >
+                <strong style={{ fontSize: 13 }}>{p.label || "Untitled"}</strong>
+                <div className="muted">{formatPeriodRange(p)}</div>
+              </button>
+              {periods.length > 1 && (
+                <button
+                  type="button"
+                  className="icon-btn"
+                  title="Remove schedule"
+                  onClick={() => removePeriod(p.id)}
+                >
+                  ✕
+                </button>
               )}
             </div>
           </div>
-        );
-      })}
+        ))}
+        <button type="button" className="btn btn-secondary" onClick={startNew}>
+          + New date range
+        </button>
+      </div>
+
+      <div className="card">
+        <div className="panel-section" style={{ gap: 10 }}>
+          <h3>{isNew ? "New schedule" : "Edit schedule"}</h3>
+          <div className="field">
+            <label htmlFor="hours-label">Label (optional)</label>
+            <input
+              id="hours-label"
+              value={draft.label}
+              onChange={(e) => {
+                setDraft((d) => ({ ...d, label: e.target.value }));
+                setSaved(false);
+              }}
+              placeholder="e.g. Summer hours"
+            />
+          </div>
+          <div className="row">
+            <div className="field" style={{ flex: 1 }}>
+              <label htmlFor="hours-start">From</label>
+              <input
+                id="hours-start"
+                type="date"
+                value={draft.startDate}
+                onChange={(e) => {
+                  setDraft((d) => ({ ...d, startDate: e.target.value }));
+                  setSaved(false);
+                }}
+              />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label htmlFor="hours-end">To</label>
+              <input
+                id="hours-end"
+                type="date"
+                value={draft.endDate}
+                onChange={(e) => {
+                  setDraft((d) => ({ ...d, endDate: e.target.value }));
+                  setSaved(false);
+                }}
+              />
+            </div>
+          </div>
+
+          {DAY_FULL.map((label, i) => {
+            const h = draft.days[i];
+            return (
+              <div key={i} className="card" style={{ padding: "8px 10px" }}>
+                <div className="panel-section" style={{ gap: 8 }}>
+                  <strong style={{ fontSize: 13 }}>{label}</strong>
+                  <label className="checkbox-row">
+                    <input
+                      type="checkbox"
+                      checked={h.isOpen}
+                      onChange={(e) => updateDay(i, { isOpen: e.target.checked })}
+                    />
+                    Open
+                  </label>
+                  {h.isOpen ? (
+                    <TimeRange
+                      from={h.openTime}
+                      to={h.closeTime}
+                      setFrom={(v) => updateDay(i, { openTime: v })}
+                      setTo={(v) => updateDay(i, { closeTime: v })}
+                    />
+                  ) : (
+                    <span className="muted">Closed all day</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {error && <p className="error">{error}</p>}
+          {saved && <p className="success">Saved — calendar updated.</p>}
+          {dirty && !saved && (
+            <p className="muted">Unsaved changes — click Save to apply.</p>
+          )}
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={save}
+            disabled={!dirty}
+          >
+            Save to calendar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -785,7 +1031,7 @@ export default function App() {
         setUser(u);
         const loaded = await calendar.load();
         if (cancelled) return;
-        setData(loaded.data);
+        setData(normalizeCalendarData(loaded.data));
         versionRef.current = loaded.version;
         setVersion(loaded.version);
       } catch (ex) {
@@ -827,7 +1073,7 @@ export default function App() {
           setUser(u);
           try {
             const loaded = await calendar.load();
-            setData(loaded.data);
+            setData(normalizeCalendarData(loaded.data));
             versionRef.current = loaded.version;
             setVersion(loaded.version);
           } catch (ex) {
@@ -860,7 +1106,7 @@ export default function App() {
     );
   }
 
-  const openDays = data.hours.filter((h) => h.isOpen).length;
+  const scheduleCount = data.hoursPeriods?.length ?? 0;
   const tabs = [
     { id: "personnel", label: "Personnel" },
     { id: "hours", label: "Hours" },
@@ -888,7 +1134,7 @@ export default function App() {
           <div className="menu-head">
             <strong>Restaurant calendar</strong>
             <span className="muted" style={{ fontSize: 12 }}>
-              {data.staff.length} staff · {data.shifts.length} shifts · {openDays}/7 open
+              {data.staff.length} staff · {data.shifts.length} shifts · {scheduleCount} hour schedules
             </span>
             <button type="button" className="btn btn-secondary" onClick={jumpToday}>
               Jump to today
