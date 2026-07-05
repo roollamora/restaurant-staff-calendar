@@ -1,6 +1,6 @@
 {
-  "version": 61,
-  "updatedAt": "2026-07-05T16:51:25.308Z",
+  "version": 62,
+  "updatedAt": "2026-07-05T16:53:15.323Z",
   "data": {
     "staff": [
       {
@@ -155,7 +155,7 @@
             {
               "id": "o4ghjafv",
               "name": "New item",
-              "expanded": false,
+              "expanded": true,
               "prepTimeMin": 0,
               "cookTimeMin": 0,
               "fixedCost": 0,
