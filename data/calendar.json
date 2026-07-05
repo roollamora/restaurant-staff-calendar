@@ -1,8 +1,16 @@
 {
-  "version": 7,
-  "updatedAt": "2026-07-05T14:29:29.859Z",
+  "version": 8,
+  "updatedAt": "2026-07-05T14:29:35.051Z",
   "data": {
-    "staff": [],
+    "staff": [
+      {
+        "id": "1yq9yaf9",
+        "name": "rula",
+        "role": "Waiter",
+        "phone": "",
+        "color": "blue"
+      }
+    ],
     "hoursPeriods": [
       {
         "id": "default",
