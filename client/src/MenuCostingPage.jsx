@@ -141,8 +141,8 @@ function MenuItemBox({
               <h4>Ingredients</h4>
               <div className="menu-ing-grid menu-ing-head muted">
                 <span>Name</span>
-                <span>Amount</span>
-                <span>€/unit</span>
+                <span className="menu-ing-num-head">Amount</span>
+                <span className="menu-ing-num-head">€/unit</span>
                 <span>Supplier</span>
                 <span>Storage</span>
                 <span />
@@ -158,6 +158,7 @@ function MenuItemBox({
                     type="number"
                     min="0"
                     step="any"
+                    className="menu-ing-num"
                     value={ing.amount || ""}
                     onChange={(e) =>
                       patchIngredient(ing.id, { amount: Number(e.target.value) || 0 })
@@ -167,6 +168,7 @@ function MenuItemBox({
                     type="number"
                     min="0"
                     step="any"
+                    className="menu-ing-num"
                     value={ing.pricePerUnit || ""}
                     onChange={(e) =>
                       patchIngredient(ing.id, {

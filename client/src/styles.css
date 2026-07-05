@@ -320,7 +320,7 @@ textarea {
 
 .menu-ing-grid {
   display: grid;
-  grid-template-columns: 1.4fr 0.7fr 0.7fr 1fr 1fr 28px;
+  grid-template-columns: minmax(0, 1fr) 56px 56px minmax(0, 1fr) minmax(0, 1fr) 24px;
   gap: 6px;
   align-items: center;
   margin-bottom: 6px;
@@ -330,6 +330,18 @@ textarea {
 .menu-ing-grid select {
   font-size: 12px;
   padding: 4px 6px;
+  min-width: 0;
+}
+
+.menu-ing-num,
+.menu-ing-num-head {
+  width: 56px;
+  max-width: 56px;
+  text-align: right;
+}
+
+.menu-ing-head .menu-ing-num-head {
+  display: block;
 }
 
 .menu-ing-head {
