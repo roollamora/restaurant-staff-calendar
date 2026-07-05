@@ -1,6 +1,6 @@
 {
-  "version": 27,
-  "updatedAt": "2026-07-05T15:50:32.542Z",
+  "version": 28,
+  "updatedAt": "2026-07-05T15:50:47.029Z",
   "data": {
     "staff": [
       {
@@ -45,10 +45,10 @@
         "phone": "",
         "color": "yellow",
         "areas": {
-          "dk": false,
-          "kueche": false,
-          "haus": false,
-          "kaffee": false
+          "dk": true,
+          "kueche": true,
+          "haus": true,
+          "kaffee": true
         }
       }
     ],
