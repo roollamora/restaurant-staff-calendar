@@ -1,18 +1,18 @@
 {
-  "version": 13,
-  "updatedAt": "2026-07-05T14:52:44.734Z",
+  "version": 14,
+  "updatedAt": "2026-07-05T14:55:36.682Z",
   "data": {
     "staff": [
       {
         "id": "1yq9yaf9",
         "name": "rula",
-        "phone": "",
+        "phone": "017666326138",
         "color": "blue",
         "areas": {
           "dk": false,
-          "kueche": false,
-          "haus": false,
-          "kaffee": false
+          "kueche": true,
+          "haus": true,
+          "kaffee": true
         }
       }
     ],
