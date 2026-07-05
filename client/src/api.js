@@ -1,9 +1,27 @@
+const TOKEN_KEY = "rsc_token";
+
+function getToken() {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function setToken(token) {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  else localStorage.removeItem(TOKEN_KEY);
+}
+
 export async function api(path, options = {}) {
-  const res = await fetch(path, {
-    credentials: "include",
-    headers: { "Content-Type": "application/json", ...options.headers },
-    ...options,
-  });
+  const token = getToken();
+  const headers = {
+    "Content-Type": "application/json",
+    ...options.headers,
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(path, { ...options, headers });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const err = new Error(body.error || res.statusText);
@@ -16,12 +34,21 @@ export async function api(path, options = {}) {
 
 export const auth = {
   me: () => api("/api/me"),
-  login: (username, password) =>
-    api("/api/login", {
+  login: async (username, password) => {
+    const result = await api("/api/login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
-    }),
-  logout: () => api("/api/logout", { method: "POST" }),
+    });
+    setToken(result.token);
+    return result;
+  },
+  logout: async () => {
+    try {
+      await api("/api/logout", { method: "POST" });
+    } finally {
+      setToken(null);
+    }
+  },
   changePassword: (currentPassword, newPassword) =>
     api("/api/change-password", {
       method: "POST",

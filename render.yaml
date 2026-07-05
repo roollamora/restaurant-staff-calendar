@@ -3,6 +3,7 @@ services:
     name: restaurant-staff-calendar
     runtime: node
     plan: free
+    autoDeploy: true
     buildCommand: npm install --include=dev && npm run build && npm prune --omit=dev
     startCommand: npm start
     healthCheckPath: /health
@@ -13,7 +14,5 @@ services:
         generateValue: true
       - key: GITHUB_REPO
         value: roollamora/restaurant-staff-calendar
-      - key: COOKIE_SECURE
-        value: "true"
       - key: GITHUB_TOKEN
         sync: false

@@ -1,6 +1,4 @@
 import express from "express";
-import session from "express-session";
-import cookieParser from "cookie-parser";
 import bcrypt from "bcryptjs";
 import path from "path";
 import fs from "fs";
@@ -16,41 +14,26 @@ import {
   getCalendarData,
   saveCalendarData,
 } from "./calendar-store.js";
+import { signToken, authMiddleware, optionalAuth } from "./auth.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3847;
 const isProd = process.env.NODE_ENV === "production";
-const useSecureCookies = process.env.COOKIE_SECURE === "true";
 const clientDist = path.join(__dirname, "..", "client", "dist");
+const BUILD_ID = process.env.RENDER_GIT_COMMIT?.slice(0, 7) || "local";
 
 initUsersStore();
 initCalendarStore();
 
 const app = express();
-app.set("trust proxy", 1);
 app.use(express.json({ limit: "2mb" }));
-app.use(cookieParser());
-app.use(
-  session({
-    name: "rsc.sid",
-    secret: process.env.SESSION_SECRET || "dev-only-change-in-production",
-    resave: false,
-    saveUninitialized: false,
-    proxy: true,
-    cookie: {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: useSecureCookies,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    },
-  }),
-);
 
-function requireAuth(req, res, next) {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: "Not authenticated" });
-  }
-  next();
+function userPayload(user) {
+  return {
+    id: user.id,
+    username: user.username,
+    displayName: user.display_name,
+  };
 }
 
 app.post("/api/login", async (req, res) => {
@@ -63,54 +46,33 @@ app.post("/api/login", async (req, res) => {
     if (!user || !bcrypt.compareSync(password, user.password_hash)) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
-    req.session.userId = user.id;
-    req.session.save((err) => {
-      if (err) {
-        return res.status(500).json({ error: "Could not start session" });
-      }
-      res.json({
-        user: {
-          id: user.id,
-          username: user.username,
-          displayName: user.display_name,
-        },
-      });
+    res.json({
+      user: userPayload(user),
+      token: signToken(user.id),
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-app.post("/api/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.clearCookie("rsc.sid");
-    res.json({ ok: true });
-  });
+app.post("/api/logout", (_req, res) => {
+  res.json({ ok: true });
 });
 
-app.get("/api/me", async (req, res) => {
-  if (!req.session.userId) {
+app.get("/api/me", optionalAuth, async (req, res) => {
+  if (!req.userId) {
     return res.json({ user: null });
   }
   try {
-    const user = await getUserById(req.session.userId);
-    if (!user) {
-      req.session.destroy(() => {});
-      return res.json({ user: null });
-    }
-    res.json({
-      user: {
-        id: user.id,
-        username: user.username,
-        displayName: user.display_name,
-      },
-    });
+    const user = await getUserById(req.userId);
+    if (!user) return res.json({ user: null });
+    res.json({ user: userPayload(user) });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-app.post("/api/change-password", requireAuth, async (req, res) => {
+app.post("/api/change-password", authMiddleware, async (req, res) => {
   const { currentPassword, newPassword } = req.body ?? {};
   if (!currentPassword || !newPassword) {
     return res
@@ -123,7 +85,7 @@ app.post("/api/change-password", requireAuth, async (req, res) => {
       .json({ error: "New password must be at least 8 characters" });
   }
   try {
-    const profile = await getUserById(req.session.userId);
+    const profile = await getUserById(req.userId);
     const user = await getUserByUsername(profile.username);
     if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
       return res.status(401).json({ error: "Current password is incorrect" });
@@ -139,7 +101,7 @@ app.post("/api/change-password", requireAuth, async (req, res) => {
   }
 });
 
-app.get("/api/data", requireAuth, async (_req, res) => {
+app.get("/api/data", authMiddleware, async (_req, res) => {
   try {
     res.json(await getCalendarData());
   } catch (e) {
@@ -148,16 +110,16 @@ app.get("/api/data", requireAuth, async (_req, res) => {
 });
 
 app.get("/health", (_req, res) => {
-  res.status(200).json({ ok: true });
+  res.status(200).json({ ok: true, build: BUILD_ID });
 });
 
-app.put("/api/data", requireAuth, async (req, res) => {
+app.put("/api/data", authMiddleware, async (req, res) => {
   const { data, version } = req.body ?? {};
   if (typeof version !== "number") {
     return res.status(400).json({ error: "Version required" });
   }
   try {
-    const user = await getUserById(req.session.userId);
+    const user = await getUserById(req.userId);
     const result = await saveCalendarData(data, version, user?.username);
     res.json(result);
   } catch (e) {
@@ -185,5 +147,5 @@ if (isProd && fs.existsSync(clientDist)) {
 }
 
 app.listen(PORT, () => {
-  console.log(`Restaurant calendar server http://localhost:${PORT}`);
+  console.log(`Restaurant calendar server http://localhost:${PORT} (build ${BUILD_ID})`);
 });
