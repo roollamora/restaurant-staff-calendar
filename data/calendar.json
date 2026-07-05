@@ -1,6 +1,6 @@
 {
-  "version": 29,
-  "updatedAt": "2026-07-05T16:40:06.744Z",
+  "version": 30,
+  "updatedAt": "2026-07-05T16:40:08.637Z",
   "data": {
     "staff": [
       {
@@ -130,7 +130,27 @@
         {
           "id": "default",
           "title": "Espresso",
-          "items": []
+          "items": [
+            {
+              "id": "dpn10zv5",
+              "name": "New item",
+              "expanded": false,
+              "prepTimeMin": 0,
+              "cookTimeMin": 0,
+              "fixedCost": 0,
+              "price": 0,
+              "ingredients": [
+                {
+                  "id": "4fajjl8h",
+                  "name": "",
+                  "amount": 0,
+                  "pricePerUnit": 0,
+                  "supplier": "",
+                  "storage": ""
+                }
+              ]
+            }
+          ]
         }
       ]
     }
