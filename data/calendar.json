@@ -1,6 +1,6 @@
 {
-  "version": 70,
-  "updatedAt": "2026-07-05T17:08:09.693Z",
+  "version": 71,
+  "updatedAt": "2026-07-05T17:08:11.529Z",
   "data": {
     "staff": [
       {
@@ -144,7 +144,7 @@
                 {
                   "id": "4fajjl8h",
                   "name": "coffee",
-                  "amount": "0.",
+                  "amount": "0.03",
                   "pricePerUnit": "0",
                   "supplier": "",
                   "storage": ""
