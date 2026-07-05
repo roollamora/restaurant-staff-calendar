@@ -1,13 +1,13 @@
 {
-  "version": 23,
-  "updatedAt": "2026-07-05T15:36:34.020Z",
+  "version": 24,
+  "updatedAt": "2026-07-05T15:36:50.581Z",
   "data": {
     "staff": [
       {
         "id": "1yq9yaf9",
         "name": "Rula",
         "phone": "017666326138",
-        "color": "cyan",
+        "color": "green",
         "areas": {
           "dk": false,
           "kueche": true,
