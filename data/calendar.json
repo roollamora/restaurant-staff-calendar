@@ -1,6 +1,6 @@
 {
-  "version": 74,
-  "updatedAt": "2026-07-05T17:08:22.460Z",
+  "version": 75,
+  "updatedAt": "2026-07-05T17:08:29.340Z",
   "data": {
     "staff": [
       {
@@ -139,7 +139,7 @@
               "prepTimeMin": 0,
               "cookTimeMin": 2,
               "fixedCost": 0,
-              "price": 0,
+              "price": 3,
               "ingredients": [
                 {
                   "id": "4fajjl8h",
