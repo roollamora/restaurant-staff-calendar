@@ -1,6 +1,6 @@
 {
-  "version": 36,
-  "updatedAt": "2026-07-05T16:40:33.708Z",
+  "version": 37,
+  "updatedAt": "2026-07-05T16:40:38.079Z",
   "data": {
     "staff": [
       {
@@ -133,7 +133,7 @@
           "items": [
             {
               "id": "dpn10zv5",
-              "name": "New item",
+              "name": "Espress",
               "expanded": true,
               "prepTimeMin": 0,
               "cookTimeMin": 0,
