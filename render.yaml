@@ -4,11 +4,7 @@ services:
     runtime: node
     plan: free
     autoDeploy: true
-    # Schedule saves commit data/*.json to main — ignore those so only code changes redeploy.
-    buildFilter:
-      ignoredPaths:
-        - data/**
-    buildCommand: npm install --include=dev && npm run build && npm prune --omit=dev
+    buildCommand: npm install --include=dev && npm run build && test -f client/dist/index.html && npm prune --omit=dev
     startCommand: npm start
     healthCheckPath: /health
     envVars:

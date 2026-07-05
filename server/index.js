@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
 import {
   initUsersStore,
   getUserByUsername,
@@ -17,6 +18,8 @@ import {
 import { signToken, authMiddleware, optionalAuth } from "./auth.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+const { version: APP_VERSION } = require("../package.json");
 const PORT = Number(process.env.PORT) || 3847;
 const isProd = process.env.NODE_ENV === "production";
 const clientDist = path.join(__dirname, "..", "client", "dist");
@@ -110,7 +113,7 @@ app.get("/api/data", authMiddleware, async (_req, res) => {
 });
 
 app.get("/health", (_req, res) => {
-  res.status(200).json({ ok: true, build: BUILD_ID });
+  res.status(200).json({ ok: true, build: BUILD_ID, version: APP_VERSION });
 });
 
 app.put("/api/data", authMiddleware, async (req, res) => {
@@ -136,6 +139,12 @@ app.put("/api/data", authMiddleware, async (req, res) => {
 });
 
 if (isProd && fs.existsSync(clientDist)) {
+  app.use((req, res, next) => {
+    if (req.path === "/" || req.path.endsWith(".html")) {
+      res.set("Cache-Control", "no-store");
+    }
+    next();
+  });
   app.use(express.static(clientDist));
   app.get("*", (_req, res) => {
     res.sendFile(path.join(clientDist, "index.html"));

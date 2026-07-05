@@ -1171,6 +1171,7 @@ export default function App() {
   const [menuTab, setMenuTab] = useState("personnel");
   const [saveState, setSaveState] = useState("saved");
   const [buildId, setBuildId] = useState(null);
+  const [liveVersion, setLiveVersion] = useState(APP_VERSION);
   const saveTimer = useRef(null);
   const versionRef = useRef(1);
   const dataRef = useRef(null);
@@ -1178,7 +1179,10 @@ export default function App() {
   useEffect(() => {
     fetch("/health")
       .then((r) => r.json())
-      .then((j) => j.build && setBuildId(j.build))
+      .then((j) => {
+        if (j.build) setBuildId(j.build);
+        if (j.version) setLiveVersion(j.version);
+      })
       .catch(() => {});
   }, []);
 
@@ -1409,7 +1413,7 @@ export default function App() {
           </div>
           <div className="menu-foot">
             <span className="muted">
-              v{APP_VERSION}
+              v{liveVersion}
               {buildId ? ` · ${buildId}` : ""}
             </span>
           </div>
