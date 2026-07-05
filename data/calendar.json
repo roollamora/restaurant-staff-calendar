@@ -1,6 +1,6 @@
 {
-  "version": 26,
-  "updatedAt": "2026-07-05T15:49:40.599Z",
+  "version": 27,
+  "updatedAt": "2026-07-05T15:50:32.542Z",
   "data": {
     "staff": [
       {
@@ -37,6 +37,18 @@
           "kueche": true,
           "haus": true,
           "kaffee": true
+        }
+      },
+      {
+        "id": "5ucpx7eo",
+        "name": "Andrea",
+        "phone": "",
+        "color": "yellow",
+        "areas": {
+          "dk": false,
+          "kueche": false,
+          "haus": false,
+          "kaffee": false
         }
       }
     ],
