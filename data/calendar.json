@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "updatedAt": "2026-07-05T14:18:49.754Z",
+  "version": 3,
+  "updatedAt": "2026-07-05T14:18:52.672Z",
   "data": {
     "staff": [],
     "events": [],
@@ -20,7 +20,7 @@
           },
           {
             "dayIndex": 1,
-            "isOpen": false,
+            "isOpen": true,
             "openTime": "12:00",
             "closeTime": "22:00"
           },
