@@ -1494,6 +1494,10 @@ export default function App() {
             Menu costing
           </button>
         </div>
+        <span className="app-version muted">
+          v{liveVersion}
+          {buildId ? ` · ${buildId}` : ""}
+        </span>
       </div>
       {appView === "calendar" ? (
         <CalendarView data={data} patchData={patchData} />
@@ -1547,12 +1551,6 @@ export default function App() {
             {menuTab === "account" && (
               <AccountPanel user={user} onLogout={logout} />
             )}
-          </div>
-          <div className="menu-foot">
-            <span className="muted">
-              v{liveVersion}
-              {buildId ? ` · ${buildId}` : ""}
-            </span>
           </div>
         </div>
       )}
