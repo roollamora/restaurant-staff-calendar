@@ -1,6 +1,6 @@
 {
-  "version": 43,
-  "updatedAt": "2026-07-05T16:43:32.885Z",
+  "version": 44,
+  "updatedAt": "2026-07-05T16:44:02.805Z",
   "data": {
     "staff": [
       {
@@ -172,6 +172,11 @@
               ]
             }
           ]
+        },
+        {
+          "id": "ygvu2i1y",
+          "title": "Coctails",
+          "items": []
         }
       ]
     }
