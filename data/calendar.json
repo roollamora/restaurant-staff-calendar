@@ -1,6 +1,6 @@
 {
-  "version": 25,
-  "updatedAt": "2026-07-05T15:37:02.484Z",
+  "version": 26,
+  "updatedAt": "2026-07-05T15:49:40.599Z",
   "data": {
     "staff": [
       {
@@ -22,6 +22,18 @@
         "color": "purple",
         "areas": {
           "dk": true,
+          "kueche": true,
+          "haus": true,
+          "kaffee": true
+        }
+      },
+      {
+        "id": "cmhsvix2",
+        "name": "Federica",
+        "phone": "",
+        "color": "orange",
+        "areas": {
+          "dk": false,
           "kueche": true,
           "haus": true,
           "kaffee": true
