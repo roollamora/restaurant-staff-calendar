@@ -235,18 +235,29 @@ export async function saveCalendarData(data, expectedVersion, username = "user")
   };
 
   if (GITHUB_TOKEN) {
-    const { envelope, sha } = await readFromGitHub();
-    if (envelope.version !== expectedVersion) {
-      const err = new Error("Version conflict — data was updated elsewhere");
-      err.code = "VERSION_CONFLICT";
-      throw err;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { envelope, sha } = await readFromGitHub();
+      if (envelope.version !== expectedVersion) {
+        const err = new Error("Version conflict — data was updated elsewhere");
+        err.code = "VERSION_CONFLICT";
+        throw err;
+      }
+      try {
+        await writeToGitHub(
+          nextEnvelope,
+          sha,
+          `Update calendar (v${nextEnvelope.version}) by ${username}`,
+        );
+        return { version: nextEnvelope.version, updatedAt: nextEnvelope.updatedAt };
+      } catch (e) {
+        if (e.code === "VERSION_CONFLICT" && attempt < 2) {
+          expectedVersion = envelope.version;
+          nextEnvelope.version = expectedVersion + 1;
+          continue;
+        }
+        throw e;
+      }
     }
-    await writeToGitHub(
-      nextEnvelope,
-      sha,
-      `Update calendar (v${nextEnvelope.version}) by ${username}`,
-    );
-    return { version: nextEnvelope.version, updatedAt: nextEnvelope.updatedAt };
   }
 
   saveLocalFile(nextEnvelope, expectedVersion);

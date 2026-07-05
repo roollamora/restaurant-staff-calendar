@@ -524,7 +524,7 @@ function PersonnelPanel({ data, patchData }) {
   );
 }
 
-function HoursPanel({ data, patchData, onFlushSave, saveState }) {
+function HoursPanel({ data, onApplyAndSave, saveState }) {
   const periods = data.hoursPeriods ?? [];
   const [selectedId, setSelectedId] = useState(periods[0]?.id ?? null);
   const [draft, setDraft] = useState(() =>
@@ -596,45 +596,45 @@ function HoursPanel({ data, patchData, onFlushSave, saveState }) {
       })),
     };
 
-    skipDraftReload.current = true;
-    patchData((prev) => {
-      const base = normalizeCalendarData(prev);
-      const list = base.hoursPeriods ?? [];
-      const exists = list.some((p) => p.id === row.id);
-      const hoursPeriods = exists
-        ? list.map((p) => (p.id === row.id ? row : p))
-        : [...list, row];
-      return prepareSaveData({ ...base, hoursPeriods });
-    });
+    const base = normalizeCalendarData(data);
+    const list = base.hoursPeriods ?? [];
+    const exists = list.some((p) => p.id === row.id);
+    const hoursPeriods = exists
+      ? list.map((p) => (p.id === row.id ? row : p))
+      : [...list, row];
+    const next = { ...base, hoursPeriods };
 
+    skipDraftReload.current = true;
     setDraft(structuredClone(row));
     setSelectedId(row.id);
-    setSaved(true);
     setError("");
 
     try {
-      await onFlushSave();
+      await onApplyAndSave(next);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
     } catch (ex) {
       setError(ex.message || "Could not save to server.");
       setSaved(false);
-      return;
     }
-
-    setTimeout(() => setSaved(false), 2500);
   }
 
-  function removePeriod(id) {
+  async function removePeriod(id) {
     if (periods.length <= 1) {
       setError("Keep at least one hours schedule.");
       return;
     }
-    patchData((prev) => ({
-      ...prev,
-      hoursPeriods: prev.hoursPeriods.filter((p) => p.id !== id),
-    }));
-    if (selectedId === id) {
-      const next = periods.find((p) => p.id !== id);
-      setSelectedId(next?.id ?? null);
+    const next = {
+      ...normalizeCalendarData(data),
+      hoursPeriods: periods.filter((p) => p.id !== id),
+    };
+    try {
+      await onApplyAndSave(next);
+      if (selectedId === id) {
+        setSelectedId(next.hoursPeriods[0]?.id ?? null);
+      }
+    } catch (ex) {
+      setError(ex.message || "Could not save removal.");
     }
   }
 
@@ -1027,52 +1027,58 @@ export default function App() {
     dataRef.current = data;
   }, [data]);
 
-  const scheduleSave = useCallback((payload) => {
-    const prepared = prepareSaveData(payload);
+  const persistData = useCallback(async (payload) => {
+    const prepared = prepareSaveData(normalizeCalendarData(payload));
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      setSaveState("saving");
+    setSaveState("saving");
+
+    let lastError;
+    for (let attempt = 0; attempt < 4; attempt++) {
       try {
         const res = await calendar.save(prepared, versionRef.current);
         versionRef.current = res.version;
         setVersion(res.version);
         setSaveState("saved");
+        return res;
       } catch (ex) {
-        if (ex.status === 409 && ex.body?.data) {
-          setData(normalizeCalendarData(ex.body.data));
+        lastError = ex;
+        if (ex.status === 409 && typeof ex.body?.version === "number") {
           versionRef.current = ex.body.version;
-          setVersion(ex.body.version);
-          setSaveState("saved");
-        } else {
-          setSaveState("error");
-          console.error(ex);
+          continue;
         }
+        break;
       }
-    }, 600);
+    }
+
+    setSaveState("error");
+    throw lastError ?? new Error("Save failed");
   }, []);
 
-  const flushSave = useCallback(async () => {
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    setSaveState("saving");
-    const payload = prepareSaveData(dataRef.current);
-    try {
-      const res = await calendar.save(payload, versionRef.current);
-      versionRef.current = res.version;
-      setVersion(res.version);
-      setSaveState("saved");
-      return res;
-    } catch (ex) {
-      if (ex.status === 409 && ex.body?.data) {
-        setData(normalizeCalendarData(ex.body.data));
-        versionRef.current = ex.body.version;
-        setVersion(ex.body.version);
-        setSaveState("saved");
-        return ex.body;
-      }
-      setSaveState("error");
-      throw ex;
+  const scheduleSave = useCallback(
+    (payload) => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        persistData(payload).catch(() => {});
+      }, 600);
+    },
+    [persistData],
+  );
+
+  const applyAndSave = useCallback(
+    async (payload) => {
+      const prepared = prepareSaveData(normalizeCalendarData(payload));
+      setData(prepared);
+      dataRef.current = prepared;
+      return persistData(prepared);
+    },
+    [persistData],
+  );
+
+  const retrySave = useCallback(() => {
+    if (dataRef.current) {
+      persistData(dataRef.current).catch(() => {});
     }
-  }, []);
+  }, [persistData]);
 
   const patchData = useCallback(
     (updater) => {
@@ -1081,6 +1087,7 @@ export default function App() {
         const next = prepareSaveData(
           typeof updater === "function" ? updater(base) : updater,
         );
+        dataRef.current = next;
         scheduleSave(next);
         return next;
       });
@@ -1184,7 +1191,14 @@ export default function App() {
     <div className="app-shell">
       {saveState !== "saved" && (
         <div className={`save-bar ${saveState}`}>
-          {saveState === "saving" ? "Saving…" : "Save failed — retrying on next edit"}
+          {saveState === "saving"
+            ? "Saving…"
+            : "Save failed — your edits are kept locally."}
+          {saveState === "error" && (
+            <button type="button" className="btn btn-secondary" onClick={retrySave}>
+              Retry save
+            </button>
+          )}
         </div>
       )}
       <CalendarView data={data} patchData={patchData} />
@@ -1225,8 +1239,7 @@ export default function App() {
             {menuTab === "hours" && (
               <HoursPanel
                 data={data}
-                patchData={patchData}
-                onFlushSave={flushSave}
+                onApplyAndSave={applyAndSave}
                 saveState={saveState}
               />
             )}

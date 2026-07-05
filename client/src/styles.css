@@ -139,7 +139,10 @@ textarea {
   right: 0;
   z-index: 400;
   padding: 6px 12px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   font-size: 12px;
   background: var(--bg-chrome);
   border-bottom: 1px solid var(--stroke-secondary);
