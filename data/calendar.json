@@ -6,9 +6,14 @@
       {
         "id": "1yq9yaf9",
         "name": "rula",
-        "role": "Waiter",
         "phone": "",
-        "color": "blue"
+        "color": "blue",
+        "areas": {
+          "dk": false,
+          "kueche": false,
+          "haus": false,
+          "kaffee": false
+        }
       }
     ],
     "hoursPeriods": [
@@ -70,7 +75,8 @@
         "staffId": "1yq9yaf9",
         "date": "2026-07-07",
         "startTime": "12:00",
-        "endTime": "22:00"
+        "endTime": "22:00",
+        "shiftType": "H"
       }
     ]
   }

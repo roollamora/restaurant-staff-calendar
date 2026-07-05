@@ -236,7 +236,30 @@ textarea {
   margin: 2px 0;
 }
 
-.shift-row {
+.day-box.missing-h {
+  border-color: #fc6b83;
+  box-shadow: inset 0 0 0 1px #fc6b83;
+}
+
+.shift-type {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 11px;
+}
+
+.area-checks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+}
+
+.menu-foot {
+  padding: 8px 12px;
+  border-top: 1px solid var(--stroke-secondary);
+  background: var(--bg-chrome);
+  text-align: center;
+  font-size: 11px;
+}
   display: flex;
   align-items: center;
   gap: 4px;

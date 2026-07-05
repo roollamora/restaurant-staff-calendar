@@ -40,14 +40,32 @@ function blankDayHours() {
 
 function migrateData(data) {
   if (!data || typeof data !== "object") return DEFAULT_DATA;
+  const staff = (data.staff ?? []).map((m) => {
+    const { role: _legacy, areas, ...rest } = m;
+    return {
+      ...rest,
+      areas: areas ?? {
+        dk: false,
+        kueche: false,
+        haus: false,
+        kaffee: false,
+      },
+    };
+  });
+  const shifts = (data.shifts ?? []).map((s) => ({
+    ...s,
+    shiftType: s.shiftType === "K" ? "K" : "H",
+  }));
   if (Array.isArray(data.hoursPeriods) && data.hoursPeriods.length > 0) {
     const { hours: _legacy, ...rest } = data;
-    return rest;
+    return { ...rest, staff, shifts };
   }
   const y = new Date().getFullYear();
   const { hours, ...rest } = data;
   return {
     ...rest,
+    staff,
+    shifts,
     hoursPeriods: [
       {
         id: "migrated-default",

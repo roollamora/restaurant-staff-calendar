@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { auth, calendar } from "./api.js";
+import { APP_VERSION } from "./version.js";
 
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const DAY_FULL = [
@@ -11,15 +12,13 @@ const DAY_FULL = [
   "Saturday",
   "Sunday",
 ];
-const ROLES = [
-  "Manager",
-  "Chef",
-  "Sous Chef",
-  "Waiter",
-  "Host",
-  "Bartender",
-  "Busser",
+const STAFF_AREAS = [
+  { key: "dk", label: "DK" },
+  { key: "kueche", label: "Küche" },
+  { key: "haus", label: "Haus" },
+  { key: "kaffee", label: "Kaffee" },
 ];
+const SHIFT_TYPES = ["H", "K"];
 const EVENT_TYPES = [
   { value: "private_party", label: "Private party" },
   { value: "holiday", label: "Holiday / closure" },
@@ -111,16 +110,50 @@ function dayFromPeriod(days, i) {
   return days.find((d) => d.dayIndex === i) ?? blankHours()[i];
 }
 
+function blankAreas() {
+  return { dk: false, kueche: false, haus: false, kaffee: false };
+}
+
+function formatStaffAreas(areas) {
+  const labels = STAFF_AREAS.filter((a) => areas?.[a.key]).map((a) => a.label);
+  return labels.length ? labels.join(", ") : "—";
+}
+
+function normalizeStaff(member) {
+  const { role: _legacy, ...rest } = member ?? {};
+  const areas = member?.areas ?? blankAreas();
+  return {
+    ...rest,
+    areas: {
+      dk: !!areas.dk,
+      kueche: !!areas.kueche,
+      haus: !!areas.haus,
+      kaffee: !!areas.kaffee,
+    },
+  };
+}
+
+function normalizeShift(shift) {
+  return {
+    ...shift,
+    shiftType: shift?.shiftType === "K" ? "K" : "H",
+  };
+}
+
 function normalizeCalendarData(data) {
   if (!data) return data;
+  const staff = (data.staff ?? []).map(normalizeStaff);
+  const shifts = (data.shifts ?? []).map(normalizeShift);
   if (Array.isArray(data.hoursPeriods) && data.hoursPeriods.length > 0) {
     const { hours: _legacy, ...rest } = data;
-    return rest;
+    return { ...rest, staff, shifts };
   }
   const y = new Date().getFullYear();
   const { hours, ...rest } = data;
   return {
     ...rest,
+    staff,
+    shifts,
     hoursPeriods: [
       {
         id: "migrated-default",
@@ -204,6 +237,8 @@ function DayBox({
   setAddingOn,
   pickStaff,
   setPickStaff,
+  pickShiftType,
+  setPickShiftType,
   tStart,
   setTStart,
   tEnd,
@@ -220,11 +255,13 @@ function DayBox({
   const myEvents = events.filter((e) => e.date === iso);
   const editing = addingOn === iso;
   const today = iso === toISO(new Date());
+  const missingH =
+    rule?.isOpen && !myShifts.some((s) => (s.shiftType ?? "H") === "H");
 
   return (
     <div
       id={`day-${iso}`}
-      className={`day-box${today ? " today" : ""}${editing ? " editing" : ""}`}
+      className={`day-box${today ? " today" : ""}${editing ? " editing" : ""}${missingH ? " missing-h" : ""}`}
     >
       <div className="day-title">
         {DAY_SHORT[wd]} {date.getDate()}
@@ -248,7 +285,10 @@ function DayBox({
           <div key={sh.id} className="shift-row">
             <Swatch color={person.color} />
             <div className="shift-info">
-              <div>{person.name}</div>
+              <div>
+                {person.name}{" "}
+                <span className="shift-type">{sh.shiftType ?? "H"}</span>
+              </div>
               <div className="muted">
                 {sh.startTime}–{sh.endTime}
               </div>
@@ -276,10 +316,22 @@ function DayBox({
               >
                 {staff.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.name} ({s.role})
+                    {s.name}
                   </option>
                 ))}
               </select>
+              <div className="pills">
+                {SHIFT_TYPES.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    className={`pill${pickShiftType === t ? " active" : ""}`}
+                    onClick={() => setPickShiftType(t)}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
               <TimeRange from={tStart} to={tEnd} setFrom={setTStart} setTo={setTEnd} />
               <div className="row">
                 <button type="button" className="btn btn-primary" onClick={onAddShift}>
@@ -303,6 +355,7 @@ function DayBox({
           onClick={() => {
             setAddingOn(iso);
             setPickStaff(staff[0]?.id ?? "");
+            setPickShiftType("H");
           }}
         >
           + Shift
@@ -318,6 +371,7 @@ function CalendarView({ data, patchData }) {
   const [loading, setLoading] = useState(false);
   const [addingOn, setAddingOn] = useState(null);
   const [pickStaff, setPickStaff] = useState("");
+  const [pickShiftType, setPickShiftType] = useState("H");
   const [tStart, setTStart] = useState("12:00");
   const [tEnd, setTEnd] = useState("22:00");
 
@@ -352,6 +406,7 @@ function CalendarView({ data, patchData }) {
           date: addingOn,
           startTime: tStart,
           endTime: tEnd,
+          shiftType: pickShiftType === "K" ? "K" : "H",
         },
       ],
     }));
@@ -379,6 +434,8 @@ function CalendarView({ data, patchData }) {
                     setAddingOn={setAddingOn}
                     pickStaff={pickStaff}
                     setPickStaff={setPickStaff}
+                    pickShiftType={pickShiftType}
+                    setPickShiftType={setPickShiftType}
                     tStart={tStart}
                     setTStart={setTStart}
                     tEnd={tEnd}
@@ -405,21 +462,30 @@ function PersonnelPanel({ data, patchData }) {
   const { staff } = data;
   const [editId, setEditId] = useState(null);
   const [name, setName] = useState("");
-  const [role, setRole] = useState("Waiter");
+  const [areas, setAreas] = useState(blankAreas());
   const [phone, setPhone] = useState("");
   const [color, setColor] = useState("blue");
 
   function reset() {
     setEditId(null);
     setName("");
-    setRole("Waiter");
+    setAreas(blankAreas());
     setPhone("");
     setColor("blue");
   }
 
+  function toggleArea(key) {
+    setAreas((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
   function save() {
     if (!name.trim()) return;
-    const row = { name: name.trim(), role, phone: phone.trim(), color };
+    const row = {
+      name: name.trim(),
+      areas: { ...areas },
+      phone: phone.trim(),
+      color,
+    };
     if (editId) {
       patchData((prev) => ({
         ...prev,
@@ -454,7 +520,7 @@ function PersonnelPanel({ data, patchData }) {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 600, fontSize: 13 }}>{m.name}</div>
               <div className="muted">
-                {m.role}
+                {formatStaffAreas(m.areas)}
                 {m.phone ? ` · ${m.phone}` : ""}
               </div>
             </div>
@@ -465,8 +531,8 @@ function PersonnelPanel({ data, patchData }) {
               onClick={() => {
                 setEditId(m.id);
                 setName(m.name);
-                setRole(m.role);
-                setPhone(m.phone);
+                setAreas({ ...blankAreas(), ...m.areas });
+                setPhone(m.phone ?? "");
                 setColor(m.color);
               }}
             >
@@ -495,13 +561,18 @@ function PersonnelPanel({ data, patchData }) {
       <hr className="divider" />
       <h3>{editId ? "Edit member" : "Add member"}</h3>
       <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />
-      <select value={role} onChange={(e) => setRole(e.target.value)}>
-        {ROLES.map((r) => (
-          <option key={r} value={r}>
-            {r}
-          </option>
+      <div className="area-checks">
+        {STAFF_AREAS.map((a) => (
+          <label key={a.key} className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={!!areas[a.key]}
+              onChange={() => toggleArea(a.key)}
+            />
+            {a.label}
+          </label>
         ))}
-      </select>
+      </div>
       <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" />
       <select value={color} onChange={(e) => setColor(e.target.value)}>
         {COLORS.map((c) => (
@@ -1247,6 +1318,9 @@ export default function App() {
             {menuTab === "account" && (
               <AccountPanel user={user} onLogout={logout} />
             )}
+          </div>
+          <div className="menu-foot">
+            <span className="muted">v{APP_VERSION}</span>
           </div>
         </div>
       )}
