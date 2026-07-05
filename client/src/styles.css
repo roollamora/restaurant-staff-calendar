@@ -251,18 +251,19 @@ textarea {
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
 }
 
-.menu-item-chevron {
+.menu-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   flex-shrink: 0;
-  width: 14px;
-  color: var(--text-tertiary);
+  margin-left: auto;
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
 }
 
 .menu-item-name {
@@ -285,11 +286,6 @@ textarea {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.menu-item-remove {
-  flex-shrink: 0;
-  margin-left: auto;
 }
 
 .menu-item-body {

@@ -70,14 +70,20 @@ function MenuItemBox({
   storageLocations,
   onChange,
   onRemove,
+  onStartEdit,
   onAddSupplier,
   onAddStorage,
 }) {
   const costs = itemCosts(item);
   const time = totalTimeMin(item);
+  const editing = !!item.editing;
 
   function patch(partial) {
     onChange({ ...item, ...partial });
+  }
+
+  function finishEdit() {
+    patch({ editing: false });
   }
 
   function patchIngredient(id, partial) {
@@ -98,44 +104,45 @@ function MenuItemBox({
   }
 
   return (
-    <div className={`menu-item-box${item.expanded ? " expanded" : ""}`}>
-      <button
-        type="button"
-        className="menu-item-head"
-        onClick={() => patch({ expanded: !item.expanded })}
-      >
-        <span className="menu-item-chevron">{item.expanded ? "▾" : "▸"}</span>
-        {item.expanded ? (
-          <input
-            className="menu-item-name-input"
-            value={item.name}
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => patch({ name: e.target.value })}
-          />
-        ) : (
-          <>
-            <span className="menu-item-name">{item.name || "Untitled"}</span>
-            <span className="menu-item-summary muted">
-              {time} min · {fmtEur(costs.totalCost)} cost · {fmtEur(costs.profit)} profit (
-              {fmtPct(costs.marginPct)})
-            </span>
-          </>
-        )}
-        <button
-          type="button"
-          className="icon-btn menu-item-remove"
-          title="Remove item"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-        >
-          ✕
-        </button>
-      </button>
+    <div className={`menu-item-box${editing ? " editing" : ""}`}>
+      <div className="menu-item-head">
+        <span className="menu-item-name">{item.name || "Untitled"}</span>
+        <span className="menu-item-summary muted">
+          {time} min · {fmtEur(costs.totalCost)} cost · {fmtEur(costs.profit)} profit (
+          {fmtPct(costs.marginPct)})
+        </span>
+        <div className="menu-item-actions">
+          {editing ? (
+            <button type="button" className="btn btn-primary btn-sm" onClick={finishEdit}>
+              Done
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="icon-btn"
+              title="Edit item"
+              onClick={() => onStartEdit(item.id)}
+            >
+              ✎
+            </button>
+          )}
+          <button
+            type="button"
+            className="icon-btn menu-item-remove"
+            title="Remove item"
+            onClick={onRemove}
+          >
+            ✕
+          </button>
+        </div>
+      </div>
 
-      {item.expanded && (
+      {editing && (
         <div className="menu-item-body">
+          <label className="field">
+            <span className="muted">Item name</span>
+            <input value={item.name} onChange={(e) => patch({ name: e.target.value })} />
+          </label>
           <div className="menu-item-cols">
             <div className="menu-item-col">
               <h4>Ingredients</h4>
@@ -268,16 +275,12 @@ function MenuItemBox({
               <div className="menu-cost-row">
                 <span className="muted">Profit</span>
                 <strong className={costs.profit >= 0 ? "success-text" : "error-text"}>
-                  {fmtEur(costs.profit)}{" "}
-                  <span className="muted">({fmtEur(costs.materialProfit)})</span>
+                  {fmtEur(costs.profit)}
                 </strong>
               </div>
               <div className="menu-cost-row">
                 <span className="muted">Margin</span>
-                <strong>
-                  {fmtPct(costs.marginPct)}{" "}
-                  <span className="muted">({fmtPct(costs.materialMarginPct)})</span>
-                </strong>
+                <strong>{fmtPct(costs.marginPct)}</strong>
               </div>
             </div>
           </div>
@@ -342,6 +345,20 @@ export default function MenuCostingPage({ data, patchData }) {
     patchMenu((m) => ({
       ...m,
       tabs: m.tabs.map((t) => (t.id === tabId ? { ...t, items } : t)),
+    }));
+  }
+
+  function startEditItem(tabId, itemId) {
+    patchMenu((m) => ({
+      ...m,
+      tabs: m.tabs.map((t) =>
+        t.id === tabId
+          ? {
+              ...t,
+              items: t.items.map((i) => ({ ...i, editing: i.id === itemId })),
+            }
+          : { ...t, items: t.items.map((i) => ({ ...i, editing: false })) },
+      ),
     }));
   }
 
@@ -490,6 +507,7 @@ export default function MenuCostingPage({ data, patchData }) {
                   activeTab.items.filter((i) => i.id !== item.id),
                 );
               }}
+              onStartEdit={(id) => startEditItem(activeTab.id, id)}
               onAddSupplier={addSupplier}
               onAddStorage={addStorage}
             />

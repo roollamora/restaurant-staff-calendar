@@ -28,7 +28,7 @@ export function blankMenuItem() {
   return {
     id: uid(),
     name: "New item",
-    expanded: false,
+    editing: false,
     prepTimeMin: 0,
     cookTimeMin: 0,
     fixedCost: 0,
@@ -60,7 +60,7 @@ function normalizeMenuItem(item) {
   return {
     id: item.id || uid(),
     name: item.name ?? "Untitled",
-    expanded: !!item.expanded,
+    editing: !!(item.editing ?? item.expanded),
     prepTimeMin: num(item.prepTimeMin),
     cookTimeMin: num(item.cookTimeMin),
     fixedCost: num(item.fixedCost),
@@ -103,19 +103,7 @@ export function itemCosts(item) {
   const totalCost = material + labour + fixed;
   const profit = price - totalCost;
   const marginPct = price > 0 ? (profit / price) * 100 : 0;
-  const materialProfit = price - material;
-  const materialMarginPct = price > 0 ? (materialProfit / price) * 100 : 0;
-  return {
-    material,
-    labour,
-    fixed,
-    totalCost,
-    profit,
-    marginPct,
-    materialProfit,
-    materialMarginPct,
-    price,
-  };
+  return { material, labour, fixed, totalCost, profit, marginPct, price };
 }
 
 export function totalTimeMin(item) {
