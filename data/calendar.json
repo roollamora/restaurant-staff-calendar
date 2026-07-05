@@ -1,6 +1,6 @@
 {
-  "version": 56,
-  "updatedAt": "2026-07-05T16:45:04.747Z",
+  "version": 57,
+  "updatedAt": "2026-07-05T16:45:10.993Z",
   "data": {
     "staff": [
       {
@@ -139,7 +139,7 @@
               "expanded": true,
               "prepTimeMin": 0,
               "cookTimeMin": 2,
-              "fixedCost": 0,
+              "fixedCost": 1,
               "price": 0,
               "ingredients": [
                 {
