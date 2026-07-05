@@ -1,6 +1,6 @@
 {
-  "version": 42,
-  "updatedAt": "2026-07-05T16:43:28.212Z",
+  "version": 43,
+  "updatedAt": "2026-07-05T16:43:32.885Z",
   "data": {
     "staff": [
       {
@@ -148,7 +148,7 @@
                   "amount": 0,
                   "pricePerUnit": 0,
                   "supplier": "",
-                  "storage": "Walk in"
+                  "storage": ""
                 }
               ]
             },
