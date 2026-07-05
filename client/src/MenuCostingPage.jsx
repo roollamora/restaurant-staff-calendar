@@ -161,8 +161,8 @@ function MenuItemBox({
     ) : (
       <div key={ing.id} className="menu-ing-grid menu-ing-read">
         <span>{ing.name || "—"}</span>
-        <span className="menu-ing-num">{ing.amount || "0"}</span>
-        <span className="menu-ing-num">{fmtEur(Number(ing.pricePerUnit) || 0)}</span>
+        <span className="menu-ing-num">{ing.amount || ""}</span>
+        <span className="menu-ing-num">{ing.pricePerUnit || ""}</span>
         <span>{ing.supplier || "—"}</span>
         <span>{ing.storage || "—"}</span>
         <span />
