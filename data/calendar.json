@@ -1,13 +1,19 @@
 {
-  "version": 5,
-  "updatedAt": "2026-07-05T14:24:19.331Z",
+  "version": 6,
+  "updatedAt": "2026-07-05T14:25:15.342Z",
   "data": {
-    "staff": [],
-    "events": [],
-    "shifts": [],
+    "staff": [
+      {
+        "id": "s1",
+        "name": "Test Save",
+        "role": "Waiter",
+        "phone": "",
+        "color": "blue"
+      }
+    ],
     "hoursPeriods": [
       {
-        "id": "migrated-default",
+        "id": "default",
         "label": "Default",
         "startDate": "2026-01-01",
         "endDate": "2026-12-31",
@@ -15,12 +21,12 @@
           {
             "dayIndex": 0,
             "isOpen": true,
-            "openTime": "12:00",
+            "openTime": "10:00",
             "closeTime": "22:00"
           },
           {
             "dayIndex": 1,
-            "isOpen": true,
+            "isOpen": false,
             "openTime": "12:00",
             "closeTime": "22:00"
           },
@@ -56,6 +62,8 @@
           }
         ]
       }
-    ]
+    ],
+    "events": [],
+    "shifts": []
   }
 }
