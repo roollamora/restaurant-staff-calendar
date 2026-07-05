@@ -9,6 +9,9 @@ import {
   getUserByUsername,
   getUserById,
   updatePassword,
+  listUsers,
+  createUser,
+  deleteUser,
 } from "./users-store.js";
 import {
   initCalendarStore,
@@ -35,8 +38,17 @@ function userPayload(user) {
   return {
     id: user.id,
     username: user.username,
-    displayName: user.display_name,
+    displayName: user.display_name ?? user.displayName,
   };
+}
+
+async function requireRula(req, res) {
+  const profile = await getUserById(req.userId);
+  if (!profile || profile.username.toLowerCase() !== "rula") {
+    res.status(403).json({ error: "Admin access required" });
+    return null;
+  }
+  return profile;
 }
 
 app.post("/api/login", async (req, res) => {
@@ -101,6 +113,42 @@ app.post("/api/change-password", authMiddleware, async (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/users", authMiddleware, async (req, res) => {
+  if (!(await requireRula(req, res))) return;
+  try {
+    res.json({ users: await listUsers() });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/users", authMiddleware, async (req, res) => {
+  const admin = await requireRula(req, res);
+  if (!admin) return;
+  const { username, displayName, password } = req.body ?? {};
+  try {
+    const user = await createUser({ username, displayName, password }, admin.username);
+    res.status(201).json({ user });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+app.delete("/api/users/:id", authMiddleware, async (req, res) => {
+  const admin = await requireRula(req, res);
+  if (!admin) return;
+  const userId = Number(req.params.id);
+  if (!Number.isFinite(userId)) {
+    return res.status(400).json({ error: "Invalid user id" });
+  }
+  try {
+    await deleteUser(userId, admin.username);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
   }
 });
 

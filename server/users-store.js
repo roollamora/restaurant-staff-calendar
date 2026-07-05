@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -136,4 +137,53 @@ export async function updatePassword(userId, passwordHash, username = "user") {
   if (!user) throw new Error("User not found");
   user.passwordHash = passwordHash;
   await saveStore(store, `Update password for ${username}`);
+}
+
+export async function listUsers() {
+  const store = await loadStore();
+  return store.users.map((u) => ({
+    id: u.id,
+    username: u.username,
+    displayName: u.displayName,
+  }));
+}
+
+function nextUserId(users) {
+  return users.reduce((max, u) => Math.max(max, Number(u.id) || 0), 0) + 1;
+}
+
+export async function createUser({ username, displayName, password }, actor = "admin") {
+  const name = String(username ?? "").trim().toLowerCase();
+  const label = String(displayName ?? "").trim();
+  const pass = String(password ?? "");
+  if (!name || !/^[a-z0-9._-]+$/.test(name)) {
+    throw new Error("Username must be lowercase letters, numbers, . _ or -");
+  }
+  if (!label) throw new Error("Display name required");
+  if (pass.length < 8) throw new Error("Password must be at least 8 characters");
+
+  const store = await loadStore();
+  if (store.users.some((u) => u.username.toLowerCase() === name)) {
+    throw new Error("Username already exists");
+  }
+  const user = {
+    id: nextUserId(store.users),
+    username: name,
+    displayName: label,
+    passwordHash: bcrypt.hashSync(pass, 12),
+  };
+  store.users.push(user);
+  await saveStore(store, `Add user ${name} by ${actor}`);
+  return { id: user.id, username: user.username, displayName: user.displayName };
+}
+
+export async function deleteUser(userId, actor = "admin") {
+  const store = await loadStore();
+  const user = store.users.find((u) => u.id === userId);
+  if (!user) throw new Error("User not found");
+  if (user.username.toLowerCase() === "rula") {
+    throw new Error("Cannot remove the admin account");
+  }
+  store.users = store.users.filter((u) => u.id !== userId);
+  await saveStore(store, `Remove user ${user.username} by ${actor}`);
 }

@@ -54,6 +54,13 @@ export const auth = {
       method: "POST",
       body: JSON.stringify({ currentPassword, newPassword }),
     }),
+  listUsers: () => api("/api/users"),
+  addUser: (username, displayName, password) =>
+    api("/api/users", {
+      method: "POST",
+      body: JSON.stringify({ username, displayName, password }),
+    }),
+  removeUser: (id) => api(`/api/users/${id}`, { method: "DELETE" }),
 };
 
 export const calendar = {

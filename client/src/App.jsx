@@ -1035,6 +1035,21 @@ function AccountPanel({ user, onLogout }) {
   const [confirm, setConfirm] = useState("");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const isAdmin = user.username.toLowerCase() === "rula";
+  const [accounts, setAccounts] = useState([]);
+  const [newUsername, setNewUsername] = useState("");
+  const [newDisplayName, setNewDisplayName] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [adminMsg, setAdminMsg] = useState("");
+  const [adminErr, setAdminErr] = useState("");
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    auth
+      .listUsers()
+      .then((res) => setAccounts(res.users))
+      .catch((ex) => setAdminErr(ex.message));
+  }, [isAdmin]);
 
   async function changePassword(e) {
     e.preventDefault();
@@ -1056,6 +1071,43 @@ function AccountPanel({ user, onLogout }) {
       setConfirm("");
     } catch (ex) {
       setErr(ex.message);
+    }
+  }
+
+  async function addAccount(e) {
+    e.preventDefault();
+    setAdminMsg("");
+    setAdminErr("");
+    try {
+      const { user: created } = await auth.addUser(
+        newUsername.trim(),
+        newDisplayName.trim(),
+        newPassword,
+      );
+      setAccounts((list) =>
+        [...list, created].sort((a, b) => a.username.localeCompare(b.username)),
+      );
+      setNewUsername("");
+      setNewDisplayName("");
+      setNewPassword("");
+      setAdminMsg(`Account “${created.displayName}” added`);
+    } catch (ex) {
+      setAdminErr(ex.message);
+    }
+  }
+
+  async function removeAccount(account) {
+    if (!window.confirm(`Remove account “${account.displayName}” (${account.username})?`)) {
+      return;
+    }
+    setAdminMsg("");
+    setAdminErr("");
+    try {
+      await auth.removeUser(account.id);
+      setAccounts((list) => list.filter((u) => u.id !== account.id));
+      setAdminMsg(`Account “${account.displayName}” removed`);
+    } catch (ex) {
+      setAdminErr(ex.message);
     }
   }
 
@@ -1094,6 +1146,63 @@ function AccountPanel({ user, onLogout }) {
           Update password
         </button>
       </form>
+      {isAdmin && (
+        <>
+          <hr className="divider" />
+          <div className="panel-section">
+            <h3>Manage accounts</h3>
+            <p className="muted">Add or remove login accounts for staff.</p>
+            {accounts.map((account) => (
+              <div key={account.id} className="card">
+                <div className="card-row">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>{account.displayName}</div>
+                    <div className="muted">{account.username}</div>
+                  </div>
+                  {account.username.toLowerCase() !== "rula" && (
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      title="Remove account"
+                      onClick={() => removeAccount(account)}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+            <hr className="divider" />
+            <h3>Add account</h3>
+            <form onSubmit={addAccount} className="panel-section">
+              <input
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                placeholder="Username (e.g. maria)"
+                autoComplete="off"
+              />
+              <input
+                value={newDisplayName}
+                onChange={(e) => setNewDisplayName(e.target.value)}
+                placeholder="Display name"
+                autoComplete="off"
+              />
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Initial password (min 8 chars)"
+                autoComplete="new-password"
+              />
+              {adminErr && <p className="error">{adminErr}</p>}
+              {adminMsg && <p className="success">{adminMsg}</p>}
+              <button type="submit" className="btn btn-primary">
+                Add account
+              </button>
+            </form>
+          </div>
+        </>
+      )}
       <hr className="divider" />
       <button type="button" className="btn btn-secondary" onClick={onLogout}>
         Log out
