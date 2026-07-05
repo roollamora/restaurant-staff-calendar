@@ -27,6 +27,11 @@ export const DEFAULT_DATA = {
   ],
   events: [],
   shifts: [],
+  menuCosting: {
+    suppliers: [],
+    storageLocations: [],
+    tabs: [{ id: "default", title: "Menu", items: [] }],
+  },
 };
 
 function blankDayHours() {
@@ -56,9 +61,14 @@ function migrateData(data) {
     ...s,
     shiftType: s.shiftType === "K" ? "K" : "H",
   }));
+  const menuCosting = data.menuCosting ?? {
+    suppliers: [],
+    storageLocations: [],
+    tabs: [{ id: "default", title: "Menu", items: [] }],
+  };
   if (Array.isArray(data.hoursPeriods) && data.hoursPeriods.length > 0) {
     const { hours: _legacy, ...rest } = data;
-    return { ...rest, staff, shifts };
+    return { ...rest, staff, shifts, menuCosting };
   }
   const y = new Date().getFullYear();
   const { hours, ...rest } = data;
@@ -66,6 +76,7 @@ function migrateData(data) {
     ...rest,
     staff,
     shifts,
+    menuCosting,
     hoursPeriods: [
       {
         id: "migrated-default",

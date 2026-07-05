@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { auth, calendar } from "./api.js";
 import { APP_VERSION } from "./version.js";
+import MenuCostingPage from "./MenuCostingPage.jsx";
+import { normalizeMenuCosting } from "./menuCosting.js";
 
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const DAY_FULL = [
@@ -146,7 +148,7 @@ function normalizeCalendarData(data) {
   const shifts = (data.shifts ?? []).map(normalizeShift);
   if (Array.isArray(data.hoursPeriods) && data.hoursPeriods.length > 0) {
     const { hours: _legacy, ...rest } = data;
-    return { ...rest, staff, shifts };
+    return { ...rest, staff, shifts, menuCosting: normalizeMenuCosting(data.menuCosting) };
   }
   const y = new Date().getFullYear();
   const { hours, ...rest } = data;
@@ -154,6 +156,7 @@ function normalizeCalendarData(data) {
     ...rest,
     staff,
     shifts,
+    menuCosting: normalizeMenuCosting(data.menuCosting),
     hoursPeriods: [
       {
         id: "migrated-default",
@@ -384,7 +387,7 @@ function DayBox({
           </div>
         );
       })}
-      {editing ? (
+      {editing && rule?.isOpen ? (
         <div className="panel-section" style={{ gap: 6 }}>
           {staff.length === 0 ? (
             <p className="muted">Add staff in Menu → Personnel first.</p>
@@ -428,7 +431,7 @@ function DayBox({
             </>
           )}
         </div>
-      ) : (
+      ) : rule?.isOpen ? (
         <button
           type="button"
           className="btn btn-secondary"
@@ -440,7 +443,7 @@ function DayBox({
         >
           + Shift
         </button>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -1278,6 +1281,7 @@ export default function App() {
   const [version, setVersion] = useState(1);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuTab, setMenuTab] = useState("personnel");
+  const [appView, setAppView] = useState("calendar");
   const [saveState, setSaveState] = useState("saved");
   const [buildId, setBuildId] = useState(null);
   const [liveVersion, setLiveVersion] = useState(APP_VERSION);
@@ -1473,15 +1477,39 @@ export default function App() {
           )}
         </div>
       )}
-      <CalendarView data={data} patchData={patchData} />
-      <button
-        type="button"
-        className="btn btn-primary menu-fab"
-        onClick={() => setMenuOpen(!menuOpen)}
-      >
-        {menuOpen ? "Close menu" : "Menu"}
-      </button>
-      {menuOpen && (
+      <div className="app-view-bar">
+        <div className="pills">
+          <button
+            type="button"
+            className={`pill${appView === "calendar" ? " active" : ""}`}
+            onClick={() => setAppView("calendar")}
+          >
+            Calendar
+          </button>
+          <button
+            type="button"
+            className={`pill${appView === "menu-costing" ? " active" : ""}`}
+            onClick={() => setAppView("menu-costing")}
+          >
+            Menu costing
+          </button>
+        </div>
+      </div>
+      {appView === "calendar" ? (
+        <CalendarView data={data} patchData={patchData} />
+      ) : (
+        <MenuCostingPage data={data} patchData={patchData} />
+      )}
+      {appView === "calendar" && (
+        <button
+          type="button"
+          className="btn btn-primary menu-fab"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          {menuOpen ? "Close menu" : "Menu"}
+        </button>
+      )}
+      {menuOpen && appView === "calendar" && (
         <div className="menu-panel">
           <div className="menu-head">
             <strong>Restaurant calendar</strong>
