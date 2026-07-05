@@ -4,10 +4,26 @@ import {
   blankMenuItem,
   fmtEur,
   fmtPct,
+  isDecimalInput,
   itemCosts,
   totalTimeMin,
   uid,
 } from "./menuCosting.js";
+
+function DecimalInput({ value, onChange, className }) {
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      className={className}
+      value={value ?? ""}
+      onChange={(e) => {
+        const v = e.target.value.replace(",", ".");
+        if (isDecimalInput(v)) onChange(v);
+      }}
+    />
+  );
+}
 
 function OptionSelect({ value, options, onChange, onAddOption, placeholder, addLabel }) {
   const [adding, setAdding] = useState(false);
@@ -112,25 +128,15 @@ function MenuItemBox({
           onChange={(e) => patchIngredient(ing.id, { name: e.target.value })}
           placeholder="Ingredient"
         />
-        <input
-          type="number"
-          min="0"
-          step="any"
+        <DecimalInput
           className="menu-ing-num"
-          value={ing.amount || ""}
-          onChange={(e) =>
-            patchIngredient(ing.id, { amount: Number(e.target.value) || 0 })
-          }
+          value={ing.amount}
+          onChange={(v) => patchIngredient(ing.id, { amount: v })}
         />
-        <input
-          type="number"
-          min="0"
-          step="any"
+        <DecimalInput
           className="menu-ing-num"
-          value={ing.pricePerUnit || ""}
-          onChange={(e) =>
-            patchIngredient(ing.id, { pricePerUnit: Number(e.target.value) || 0 })
-          }
+          value={ing.pricePerUnit}
+          onChange={(v) => patchIngredient(ing.id, { pricePerUnit: v })}
         />
         <OptionSelect
           value={ing.supplier}

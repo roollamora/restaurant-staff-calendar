@@ -17,8 +17,8 @@ export function blankIngredient() {
   return {
     id: uid(),
     name: "",
-    amount: 0,
-    pricePerUnit: 0,
+    amount: "",
+    pricePerUnit: "",
     supplier: "",
     storage: "",
   };
@@ -71,8 +71,8 @@ function normalizeMenuItem(item) {
       ? item.ingredients.map((ing) => ({
           id: ing.id || uid(),
           name: ing.name ?? "",
-          amount: num(ing.amount),
-          pricePerUnit: num(ing.pricePerUnit),
+          amount: decimalField(ing.amount),
+          pricePerUnit: decimalField(ing.pricePerUnit),
           supplier: ing.supplier ?? "",
           storage: ing.storage ?? "",
         }))
@@ -83,6 +83,16 @@ function normalizeMenuItem(item) {
 function num(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
+}
+
+export function decimalField(v) {
+  if (v === null || v === undefined || v === "") return "";
+  return String(v);
+}
+
+export function isDecimalInput(raw) {
+  const s = String(raw).replace(",", ".");
+  return s === "" || /^\d*\.?\d*$/.test(s);
 }
 
 export function materialCost(item) {

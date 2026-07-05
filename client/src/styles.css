@@ -367,6 +367,14 @@ textarea {
   width: 56px;
   max-width: 56px;
   text-align: right;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.menu-ing-num::-webkit-outer-spin-button,
+.menu-ing-num::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .menu-ing-head .menu-ing-num-head {
