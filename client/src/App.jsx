@@ -93,6 +93,24 @@ function formatPeriodRange(p) {
   return `${fromISO(p.startDate).toLocaleDateString("en-US", f)} – ${fromISO(p.endDate).toLocaleDateString("en-US", f)}`;
 }
 
+function legacyHoursArray(hoursPeriods) {
+  if (!hoursPeriods?.length) return blankHours();
+  const today = toISO(new Date());
+  const match =
+    hoursPeriods.find((p) => today >= p.startDate && today <= p.endDate) ??
+    hoursPeriods[0];
+  return match.days.map((d, i) => ({ ...blankHours()[i], ...d, dayIndex: i }));
+}
+
+function prepareSaveData(data) {
+  const normalized = normalizeCalendarData(data);
+  return { ...normalized, hours: legacyHoursArray(normalized.hoursPeriods) };
+}
+
+function dayFromPeriod(days, i) {
+  return days.find((d) => d.dayIndex === i) ?? blankHours()[i];
+}
+
 function normalizeCalendarData(data) {
   if (!data) return data;
   if (Array.isArray(data.hoursPeriods) && data.hoursPeriods.length > 0) {
@@ -303,7 +321,7 @@ function CalendarView({ data, patchData }) {
   const [tStart, setTStart] = useState("12:00");
   const [tEnd, setTEnd] = useState("22:00");
 
-  const { staff, hoursPeriods, events, shifts } = data;
+  const { staff, hoursPeriods, events, shifts } = normalizeCalendarData(data);
   const start = fromISO(anchor);
   const weeks = Array.from({ length: weekCount }, (_, w) =>
     Array.from({ length: 7 }, (_, d) => plusDays(start, w * 7 + d)),
@@ -506,29 +524,36 @@ function PersonnelPanel({ data, patchData }) {
   );
 }
 
-function HoursPanel({ data, patchData }) {
+function HoursPanel({ data, patchData, onFlushSave, saveState }) {
   const periods = data.hoursPeriods ?? [];
   const [selectedId, setSelectedId] = useState(periods[0]?.id ?? null);
-  const [draft, setDraft] = useState(null);
+  const [draft, setDraft] = useState(() =>
+    periods[0] ? structuredClone(periods[0]) : newHoursPeriod("Default"),
+  );
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const skipDraftReload = useRef(false);
 
   const savedPeriod = periods.find((p) => p.id === selectedId) ?? null;
   const isNew = draft && !periods.some((p) => p.id === draft.id);
 
   useEffect(() => {
+    if (skipDraftReload.current) {
+      skipDraftReload.current = false;
+      return;
+    }
     if (selectedId && savedPeriod) {
       setDraft(structuredClone(savedPeriod));
       setError("");
     }
-  }, [selectedId, data.hoursPeriods]);
+  }, [selectedId]);
 
   useEffect(() => {
-    if (!periods.length && !draft) {
+    if (!periods.length) {
       setDraft(newHoursPeriod("Default"));
       setSelectedId(null);
     }
-  }, [periods.length, draft]);
+  }, [periods.length]);
 
   function selectPeriod(id) {
     setSelectedId(id);
@@ -551,7 +576,7 @@ function HoursPanel({ data, patchData }) {
     setSaved(false);
   }
 
-  function save() {
+  async function save() {
     if (!draft?.startDate || !draft?.endDate) {
       setError("Start and end dates are required.");
       return;
@@ -564,22 +589,37 @@ function HoursPanel({ data, patchData }) {
     const row = {
       ...draft,
       label: draft.label?.trim() || formatPeriodRange(draft),
-      days: draft.days.map((d, i) => ({ ...blankHours()[i], ...d, dayIndex: i })),
+      days: DAY_FULL.map((_, i) => ({
+        ...blankHours()[i],
+        ...dayFromPeriod(draft.days, i),
+        dayIndex: i,
+      })),
     };
 
+    skipDraftReload.current = true;
     patchData((prev) => {
-      const list = prev.hoursPeriods ?? [];
+      const base = normalizeCalendarData(prev);
+      const list = base.hoursPeriods ?? [];
       const exists = list.some((p) => p.id === row.id);
       const hoursPeriods = exists
         ? list.map((p) => (p.id === row.id ? row : p))
         : [...list, row];
-      const { hours: _legacy, ...rest } = prev;
-      return { ...rest, hoursPeriods };
+      return prepareSaveData({ ...base, hoursPeriods });
     });
 
+    setDraft(structuredClone(row));
     setSelectedId(row.id);
     setSaved(true);
     setError("");
+
+    try {
+      await onFlushSave();
+    } catch (ex) {
+      setError(ex.message || "Could not save to server.");
+      setSaved(false);
+      return;
+    }
+
     setTimeout(() => setSaved(false), 2500);
   }
 
@@ -601,15 +641,6 @@ function HoursPanel({ data, patchData }) {
   const dirty =
     draft &&
     (isNew || !savedPeriod || JSON.stringify(draft) !== JSON.stringify(savedPeriod));
-
-  if (!draft) {
-    return (
-      <div className="panel-section">
-        <h2>Opening hours</h2>
-        <p className="muted">Loading…</p>
-      </div>
-    );
-  }
 
   return (
     <div className="panel-section">
@@ -694,7 +725,7 @@ function HoursPanel({ data, patchData }) {
           </div>
 
           {DAY_FULL.map((label, i) => {
-            const h = draft.days[i];
+            const h = dayFromPeriod(draft.days, i);
             return (
               <div key={i} className="card" style={{ padding: "8px 10px" }}>
                 <div className="panel-section" style={{ gap: 8 }}>
@@ -723,6 +754,9 @@ function HoursPanel({ data, patchData }) {
           })}
 
           {error && <p className="error">{error}</p>}
+          {saveState === "error" && !error && (
+            <p className="error">Server save failed — try Save again.</p>
+          )}
           {saved && <p className="success">Saved — calendar updated.</p>}
           {dirty && !saved && (
             <p className="muted">Unsaved changes — click Save to apply.</p>
@@ -987,19 +1021,25 @@ export default function App() {
   const [saveState, setSaveState] = useState("saved");
   const saveTimer = useRef(null);
   const versionRef = useRef(1);
+  const dataRef = useRef(null);
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   const scheduleSave = useCallback((payload) => {
+    const prepared = prepareSaveData(payload);
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       setSaveState("saving");
       try {
-        const res = await calendar.save(payload, versionRef.current);
+        const res = await calendar.save(prepared, versionRef.current);
         versionRef.current = res.version;
         setVersion(res.version);
         setSaveState("saved");
       } catch (ex) {
         if (ex.status === 409 && ex.body?.data) {
-          setData(ex.body.data);
+          setData(normalizeCalendarData(ex.body.data));
           versionRef.current = ex.body.version;
           setVersion(ex.body.version);
           setSaveState("saved");
@@ -1011,10 +1051,36 @@ export default function App() {
     }, 600);
   }, []);
 
+  const flushSave = useCallback(async () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    setSaveState("saving");
+    const payload = prepareSaveData(dataRef.current);
+    try {
+      const res = await calendar.save(payload, versionRef.current);
+      versionRef.current = res.version;
+      setVersion(res.version);
+      setSaveState("saved");
+      return res;
+    } catch (ex) {
+      if (ex.status === 409 && ex.body?.data) {
+        setData(normalizeCalendarData(ex.body.data));
+        versionRef.current = ex.body.version;
+        setVersion(ex.body.version);
+        setSaveState("saved");
+        return ex.body;
+      }
+      setSaveState("error");
+      throw ex;
+    }
+  }, []);
+
   const patchData = useCallback(
     (updater) => {
       setData((prev) => {
-        const next = typeof updater === "function" ? updater(prev) : updater;
+        const base = normalizeCalendarData(prev);
+        const next = prepareSaveData(
+          typeof updater === "function" ? updater(base) : updater,
+        );
         scheduleSave(next);
         return next;
       });
@@ -1156,7 +1222,14 @@ export default function App() {
             {menuTab === "personnel" && (
               <PersonnelPanel data={data} patchData={patchData} />
             )}
-            {menuTab === "hours" && <HoursPanel data={data} patchData={patchData} />}
+            {menuTab === "hours" && (
+              <HoursPanel
+                data={data}
+                patchData={patchData}
+                onFlushSave={flushSave}
+                saveState={saveState}
+              />
+            )}
             {menuTab === "events" && <EventsPanel data={data} patchData={patchData} />}
             {menuTab === "account" && (
               <AccountPanel user={user} onLogout={logout} />

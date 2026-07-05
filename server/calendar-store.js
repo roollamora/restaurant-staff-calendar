@@ -91,7 +91,9 @@ function validateHoursPeriods(periods) {
 function validateData(data) {
   if (!data || typeof data !== "object") return false;
   if (!Array.isArray(data.staff)) return false;
-  if (!validateHoursPeriods(data.hoursPeriods)) return false;
+  const hasPeriods = validateHoursPeriods(data.hoursPeriods);
+  const hasLegacy = Array.isArray(data.hours) && data.hours.length === 7;
+  if (!hasPeriods && !hasLegacy) return false;
   if (!Array.isArray(data.events)) return false;
   if (!Array.isArray(data.shifts)) return false;
   return true;
