@@ -1,6 +1,6 @@
 {
-  "version": 18,
-  "updatedAt": "2026-07-05T15:01:08.911Z",
+  "version": 19,
+  "updatedAt": "2026-07-05T15:01:18.677Z",
   "data": {
     "staff": [
       {
@@ -94,6 +94,14 @@
         "id": "bjoun3ws",
         "staffId": "1yq9yaf9",
         "date": "2026-07-09",
+        "startTime": "12:00",
+        "endTime": "22:00",
+        "shiftType": "H"
+      },
+      {
+        "id": "d3f30q7z",
+        "staffId": "azsd6oyl",
+        "date": "2026-07-08",
         "startTime": "12:00",
         "endTime": "22:00",
         "shiftType": "H"
