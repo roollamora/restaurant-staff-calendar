@@ -1,6 +1,6 @@
 {
-  "version": 28,
-  "updatedAt": "2026-07-05T15:50:47.029Z",
+  "version": 29,
+  "updatedAt": "2026-07-05T16:40:06.744Z",
   "data": {
     "staff": [
       {
@@ -122,6 +122,17 @@
         "endTime": "22:00",
         "shiftType": "H"
       }
-    ]
+    ],
+    "menuCosting": {
+      "suppliers": [],
+      "storageLocations": [],
+      "tabs": [
+        {
+          "id": "default",
+          "title": "Espresso",
+          "items": []
+        }
+      ]
+    }
   }
 }
