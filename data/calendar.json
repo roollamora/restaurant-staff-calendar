@@ -1,6 +1,6 @@
 {
-  "version": 32,
-  "updatedAt": "2026-07-05T16:40:18.840Z",
+  "version": 33,
+  "updatedAt": "2026-07-05T16:40:20.638Z",
   "data": {
     "staff": [
       {
@@ -129,7 +129,7 @@
       "tabs": [
         {
           "id": "default",
-          "title": "Warm d",
+          "title": "Warm ",
           "items": [
             {
               "id": "dpn10zv5",
