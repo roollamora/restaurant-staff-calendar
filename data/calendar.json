@@ -1,6 +1,6 @@
 {
-  "version": 11,
-  "updatedAt": "2026-07-05T14:37:51.669Z",
+  "version": 12,
+  "updatedAt": "2026-07-05T14:46:56.816Z",
   "data": {
     "staff": [
       {
@@ -64,6 +64,14 @@
       }
     ],
     "events": [],
-    "shifts": []
+    "shifts": [
+      {
+        "id": "t93zoyjl",
+        "staffId": "1yq9yaf9",
+        "date": "2026-07-07",
+        "startTime": "12:00",
+        "endTime": "22:00"
+      }
+    ]
   }
 }
