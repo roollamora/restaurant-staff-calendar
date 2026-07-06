@@ -1,6 +1,6 @@
 {
-  "version": 81,
-  "updatedAt": "2026-07-06T21:15:01.827Z",
+  "version": 82,
+  "updatedAt": "2026-07-06T21:15:07.055Z",
   "data": {
     "staff": [
       {
@@ -134,14 +134,6 @@
         "id": "tfnptr46",
         "staffId": "cmhsvix2",
         "date": "2026-07-10",
-        "startTime": "12:00",
-        "endTime": "22:00",
-        "shiftType": "H"
-      },
-      {
-        "id": "9q35wpp0",
-        "staffId": "1yq9yaf9",
-        "date": "2026-07-11",
         "startTime": "12:00",
         "endTime": "22:00",
         "shiftType": "H"
