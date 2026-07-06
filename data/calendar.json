@@ -1,6 +1,6 @@
 {
-  "version": 80,
-  "updatedAt": "2026-07-06T21:14:55.396Z",
+  "version": 81,
+  "updatedAt": "2026-07-06T21:15:01.827Z",
   "data": {
     "staff": [
       {
@@ -141,6 +141,14 @@
       {
         "id": "9q35wpp0",
         "staffId": "1yq9yaf9",
+        "date": "2026-07-11",
+        "startTime": "12:00",
+        "endTime": "22:00",
+        "shiftType": "H"
+      },
+      {
+        "id": "dcqdvu0y",
+        "staffId": "cmhsvix2",
         "date": "2026-07-11",
         "startTime": "12:00",
         "endTime": "22:00",
