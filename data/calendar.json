@@ -1,6 +1,6 @@
 {
-  "version": 87,
-  "updatedAt": "2026-07-06T21:16:59.264Z",
+  "version": 88,
+  "updatedAt": "2026-07-07T07:02:55.997Z",
   "data": {
     "staff": [
       {
@@ -139,18 +139,10 @@
         "shiftType": "H"
       },
       {
-        "id": "h6sjnd4f",
-        "staffId": "cmhsvix2",
-        "date": "2026-07-09",
-        "startTime": "17:00",
-        "endTime": "22:00",
-        "shiftType": "H"
-      },
-      {
-        "id": "flnknzbj",
-        "staffId": "cmhsvix2",
+        "id": "t8ra9w8o",
+        "staffId": "1yq9yaf9",
         "date": "2026-07-10",
-        "startTime": "15:00",
+        "startTime": "12:00",
         "endTime": "22:00",
         "shiftType": "H"
       }
