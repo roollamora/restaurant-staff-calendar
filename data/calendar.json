@@ -1,6 +1,6 @@
 {
-  "version": 94,
-  "updatedAt": "2026-07-07T13:07:36.373Z",
+  "version": 95,
+  "updatedAt": "2026-07-07T13:08:09.805Z",
   "data": {
     "staff": [
       {
@@ -152,14 +152,6 @@
         "date": "2026-07-08",
         "startTime": "12:00",
         "endTime": "18:00",
-        "shiftType": "H"
-      },
-      {
-        "id": "4t241spr",
-        "staffId": "1yq9yaf9",
-        "date": "2026-07-06",
-        "startTime": "12:00",
-        "endTime": "22:00",
         "shiftType": "H"
       }
     ],
