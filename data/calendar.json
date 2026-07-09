@@ -1,6 +1,6 @@
 {
-  "version": 103,
-  "updatedAt": "2026-07-09T11:15:55.226Z",
+  "version": 104,
+  "updatedAt": "2026-07-09T11:16:39.407Z",
   "data": {
     "staff": [
       {
@@ -92,6 +92,56 @@
           {
             "dayIndex": 5,
             "isOpen": false,
+            "openTime": "12:00",
+            "closeTime": "22:00"
+          },
+          {
+            "dayIndex": 6,
+            "isOpen": false,
+            "openTime": "12:00",
+            "closeTime": "22:00"
+          }
+        ]
+      },
+      {
+        "id": "qvrivskw",
+        "label": "Week 1",
+        "startDate": "2026-07-06",
+        "endDate": "2026-07-12",
+        "days": [
+          {
+            "dayIndex": 0,
+            "isOpen": true,
+            "openTime": "12:00",
+            "closeTime": "22:00"
+          },
+          {
+            "dayIndex": 1,
+            "isOpen": true,
+            "openTime": "12:00",
+            "closeTime": "22:00"
+          },
+          {
+            "dayIndex": 2,
+            "isOpen": true,
+            "openTime": "12:00",
+            "closeTime": "22:00"
+          },
+          {
+            "dayIndex": 3,
+            "isOpen": true,
+            "openTime": "12:00",
+            "closeTime": "22:00"
+          },
+          {
+            "dayIndex": 4,
+            "isOpen": true,
+            "openTime": "12:00",
+            "closeTime": "22:00"
+          },
+          {
+            "dayIndex": 5,
+            "isOpen": true,
             "openTime": "12:00",
             "closeTime": "22:00"
           },
