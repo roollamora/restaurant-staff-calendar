@@ -1,6 +1,6 @@
 {
-  "version": 102,
-  "updatedAt": "2026-07-09T11:15:21.242Z",
+  "version": 103,
+  "updatedAt": "2026-07-09T11:15:55.226Z",
   "data": {
     "staff": [
       {
@@ -56,42 +56,42 @@
       {
         "id": "default",
         "label": "Default",
-        "startDate": "2026-07-06",
+        "startDate": "2026-07-12",
         "endDate": "2026-08-12",
         "days": [
           {
             "dayIndex": 0,
-            "isOpen": true,
+            "isOpen": false,
             "openTime": "12",
             "closeTime": "22:00"
           },
           {
             "dayIndex": 1,
-            "isOpen": true,
+            "isOpen": false,
             "openTime": "12:00",
             "closeTime": "22:00"
           },
           {
             "dayIndex": 2,
-            "isOpen": true,
+            "isOpen": false,
             "openTime": "12:00",
             "closeTime": "22:00"
           },
           {
             "dayIndex": 3,
-            "isOpen": true,
+            "isOpen": false,
             "openTime": "12:00",
             "closeTime": "22:00"
           },
           {
             "dayIndex": 4,
-            "isOpen": true,
+            "isOpen": false,
             "openTime": "12:00",
             "closeTime": "22:00"
           },
           {
             "dayIndex": 5,
-            "isOpen": true,
+            "isOpen": false,
             "openTime": "12:00",
             "closeTime": "22:00"
           },
