@@ -1,6 +1,6 @@
 {
-  "version": 98,
-  "updatedAt": "2026-07-07T22:29:12.029Z",
+  "version": 99,
+  "updatedAt": "2026-07-09T04:31:06.349Z",
   "data": {
     "staff": [
       {
@@ -160,6 +160,14 @@
         "date": "2026-07-11",
         "startTime": "12:00",
         "endTime": "18.00",
+        "shiftType": "H"
+      },
+      {
+        "id": "dxgymw1o",
+        "staffId": "1yq9yaf9",
+        "date": "2026-07-11",
+        "startTime": "12:00",
+        "endTime": "14:00",
         "shiftType": "H"
       }
     ],
